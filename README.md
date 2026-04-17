@@ -70,7 +70,19 @@ Claude Code（デスクトップアプリ / VS Code / CLI 全環境共通）デ:
 
 ## モード切替 / Style Modes
 
-v0.5.0〜、環境変数 `ROBO_STYLE` デ表記スタイル選択可能:
+v0.6.0〜、スラッシュコマンド & 環境変数デ表記スタイル選択可能:
+
+### スラッシュコマンド（推奨）
+
+```
+/robo-hiragana    # ひらがなモード切替
+/robo-katakana    # カタカナモード切替（既定）
+/robo-mode        # 現在モード表示
+```
+
+`~/.claude-robo-mode` ニ書込マレ、**次セッション起動時ニ反映**。現セッションハ変更前ノ状態継続。
+
+### 環境変数（代替）
 
 | 値 | スタイル | バナー |
 |----|---------|-------|
@@ -88,6 +100,14 @@ unset ROBO_STYLE
 ```
 
 shell profile (`~/.zshrc` / `~/.bashrc`) ニ追加デ永続化。設定変更後ハ新セッション起動必要。
+
+### 優先順位
+
+```
+~/.claude-robo-mode  >  $ROBO_STYLE  >  katakana（既定）
+```
+
+コマンド経由設定ハ環境変数ヲオーバーライドスル。
 
 **両モード共通**: 体言止メ、敬語フィラー削除、冷徹トーン、絵文字、技術パラメータ、ステータスID。差異ハ助詞・語尾ノミ。
 
@@ -246,6 +266,20 @@ On new session:
 
 ## Style Modes (English)
 
+As of v0.6.0, pick the output style via slash command or env var:
+
+### Slash Commands (recommended)
+
+```
+/robo-hiragana    # switch to hiragana mode
+/robo-katakana    # switch to katakana mode (default)
+/robo-mode        # show current mode
+```
+
+Writes to `~/.claude-robo-mode`. Takes effect on the **next** session.
+
+### Env Var (alternative)
+
 As of v0.5.0, set the `ROBO_STYLE` env var to pick the output style:
 
 | Value | Style | Banner |
@@ -263,6 +297,12 @@ unset ROBO_STYLE
 
 Add to your shell profile (`~/.zshrc` / `~/.bashrc`) to persist. A new
 session is required after changing the variable.
+
+### Priority
+
+```
+~/.claude-robo-mode  >  $ROBO_STYLE  >  katakana (default)
+```
 
 **Shared across modes**: noun-ending style, emoji palette, technical
 parameter displays, status IDs. The difference is limited to particles,

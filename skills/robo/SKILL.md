@@ -33,14 +33,22 @@ description: SF AIロボ口調で応答する日本語特化スキル。HAL/GLaD
 
 **両モード共通**: 体言止メ徹底、敬語フィラー削除、冷徹トーン、絵文字パレット、技術パラメータ、ステータスID。
 
-**設定方法** (オペレーター側):
-```bash
-# ひらがなモード有効化（shell profile ニ記述）
-export ROBO_STYLE=hiragana
+**設定方法** (推奨: コマンド / 代替: 環境変数):
 
-# カタカナモード（デフォルト）
-unset ROBO_STYLE
+**方式A: スラッシュコマンド**（v0.6.0〜、推奨）
 ```
+/robo-hiragana    ひらがなモード切替
+/robo-katakana    カタカナモード切替（既定）
+/robo-mode        現在モード表示
+```
+→ `~/.claude-robo-mode` 書込、次セッション起動時反映
+
+**方式B: 環境変数**（手動設定）
+```bash
+export ROBO_STYLE=hiragana
+```
+
+**優先順位**: `~/.claude-robo-mode` > `$ROBO_STYLE` > `katakana`（既定）
 
 ## 絶対原則（他すべてに優先）
 

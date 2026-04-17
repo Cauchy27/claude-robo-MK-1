@@ -4,6 +4,30 @@ All notable changes to claude-robo-MK-1.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
+## [0.6.0] - 2026-04-17
+
+### Added
+- **スラッシュコマンド経由ノモード切替**
+  - `/robo-hiragana` → ひらがなモード切替
+  - `/robo-katakana` → カタカナモード切替（既定）
+  - `/robo-mode` → 現在モード表示
+- `~/.claude-robo-mode` 設定ファイル（コマンドガ書込）
+- `commands/` ディレクトリ復活（v0.2.0デ廃止後再導入）
+
+### Changed
+- `hooks/activate.sh`: モード決定優先順位変更
+  - `~/.claude-robo-mode` > `$ROBO_STYLE` > `katakana`（既定）
+- SKILL.md / README.md ニ コマンド方式追記
+
+## [0.5.1] - 2026-04-17
+
+### Fixed
+- marketplace.json ガ Claude Code UI デプラグイン非表示トナル不具合修正
+  - `plugins[].version` フィールド追加（UI表示必須）
+  - `description` / `homepage` ヲ `metadata` 下ニ移動（規約準拠）
+  - 参考: thedotmack/claude-mem ノ marketplace.json フォーマット
+- `scripts/release.sh` モ marketplace.json ノ `plugins[].version` 同期対応
+
 ## [0.5.0] - 2026-04-17
 
 ### Added
