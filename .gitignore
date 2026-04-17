@@ -2,3 +2,9 @@
 *.log
 .tmp/
 node_modules/
+
+# 開発用AI支援ドキュメント（公開プラグインには含めない）
+CLAUDE.md
+.claude/
+.docs/
+.tmp/
