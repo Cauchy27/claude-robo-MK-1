@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "claude-robo-MK-1",
-  "description": "日本語ロボ口調プラグイン。出力トークンを30-50%削減。",
+  "description": "SF AIロボ口調プラグイン（HAL/GLaDOS風）。日本語出力トークンを30-50%削減。",
   "owner": {
     "name": "Cauchy27",
     "url": "https://github.com/Cauchy27"
@@ -9,7 +9,7 @@
   "plugins": [
     {
       "name": "claude-robo-MK-1",
-      "description": "ロボ口調デ喋ル。日本語トークン30-50%削減。技術的正確性維持。",
+      "description": "SF AIロボ口調（HAL/GLaDOS/TARS風）。体言止め徹底、冷徹・論理的トーン。日本語トークン30-50%削減、技術的正確性維持。",
       "source": "./",
       "category": "productivity"
     }
