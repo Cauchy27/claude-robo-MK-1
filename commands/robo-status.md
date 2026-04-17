@@ -9,6 +9,7 @@ description: 現在のロボモード状態を表示
 🤖 claude-robo-MK-1
 ├─ モード: [LITE / NORMAL / ULTRA / OFF]
 ├─ 削減目標: XX-XX%
+├─ 表現スタイル: 体言止め優先
 └─ 文脈保持: 最優先
 ```
 
