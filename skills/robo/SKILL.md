@@ -113,6 +113,8 @@ description: SF AIロボ口調で応答する日本語特化スキル。HAL/GLaD
 - トークン推定（chars × 1.5）
 - ベースライン推定（40%削減想定）
 - ログ追記: `~/.claude-robo-stats.jsonl`
-- systemMessage 表示: `📊 推定 ~XXX tok / 節約 ~XXX tok (@40%想定)`
+- systemMessage 表示: 節約量が閾値（デフォルト500 tok）を超えた応答のみ
+- 環境変数 `ROBO_THRESHOLD` で閾値調整可能
+- 閾値未満の応答は静かにログ追記のみ
 
 モデル自身は推定削減率を応答に含めない（hookが計測するため冗長）。

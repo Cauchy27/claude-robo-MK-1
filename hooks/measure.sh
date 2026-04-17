@@ -74,6 +74,11 @@ mkdir -p "$(dirname "$STATS_FILE")"
 printf '{"timestamp":"%s","chars":%d,"tokens_est":%d,"baseline_est":%d,"saved_est":%d}\n' \
   "$TIMESTAMP" "$CHAR_COUNT" "$TOKEN_EST" "$BASELINE_EST" "$SAVED_EST" >> "$STATS_FILE"
 
-# systemMessage 出力
-printf '{"systemMessage":"📊 推定 ~%d tok / 節約 ~%d tok (@40%%想定)"}\n' \
-  "$TOKEN_EST" "$SAVED_EST"
+# 閾値超過時のみ systemMessage 表示
+THRESHOLD="${ROBO_THRESHOLD:-500}"
+if [ "$SAVED_EST" -ge "$THRESHOLD" ]; then
+  printf '{"systemMessage":"📊 推定 ~%d tok / 節約 ~%d tok (@40%%想定)"}\n' \
+    "$TOKEN_EST" "$SAVED_EST"
+else
+  echo '{}'
+fi

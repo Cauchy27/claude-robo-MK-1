@@ -4,6 +4,17 @@ All notable changes to claude-robo-MK-1.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
+## [0.3.1] - 2026-04-17
+
+### Changed
+- Stop hook の systemMessage 表示を閾値方式に変更（デフォルト: saved_est >= 500 tok）
+- 環境変数 `ROBO_THRESHOLD` で閾値調整可能
+- ログ追記は全応答で継続（頻度変更なし）
+
+### Rationale
+- 短い応答まで毎回表示されていたノイズを抑制
+- 意味のある削減量があった応答のみ可視化
+
 ## [0.3.0] - 2026-04-17
 
 ### Added
