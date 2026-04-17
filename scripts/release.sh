@@ -18,6 +18,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PLUGIN_JSON="${ROOT}/.claude-plugin/plugin.json"
+MARKETPLACE_JSON="${ROOT}/.claude-plugin/marketplace.json"
 
 DRY_RUN=0
 FORCE_BUMP=""
@@ -86,13 +87,19 @@ if [[ "$DRY_RUN" == "1" ]]; then
   exit 0
 fi
 
-# 4. Apply version bump
+# 4. Apply version bump (plugin.json + marketplace.json plugins[].version)
 tmpfile=$(mktemp)
 sed "s/\"version\": \"$current\"/\"version\": \"$new_version\"/" "$PLUGIN_JSON" > "$tmpfile"
 mv "$tmpfile" "$PLUGIN_JSON"
 
+if [[ -f "$MARKETPLACE_JSON" ]]; then
+  tmpfile=$(mktemp)
+  sed "s/\"version\": \"$current\"/\"version\": \"$new_version\"/" "$MARKETPLACE_JSON" > "$tmpfile"
+  mv "$tmpfile" "$MARKETPLACE_JSON"
+fi
+
 # 5. Commit + tag
-git add "$PLUGIN_JSON"
+git add "$PLUGIN_JSON" "$MARKETPLACE_JSON"
 git commit -m "release: v${new_version}"
 git tag "v${new_version}"
 

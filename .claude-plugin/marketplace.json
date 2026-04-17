@@ -1,16 +1,20 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "claude-robo-MK-1",
-  "description": "SF AIロボ口調プラグイン（HAL/GLaDOS風）。日本語出力トークンを30-50%削減デキルカモ。Stop hookで実測。",
   "owner": {
     "name": "Cauchy27",
     "url": "https://github.com/Cauchy27"
   },
+  "metadata": {
+    "description": "SF AIロボ口調プラグイン（HAL/GLaDOS風）。日本語出力トークンを30-50%削減デキルカモ。Stop hookで実測。",
+    "homepage": "https://github.com/Cauchy27/claude-robo-MK-1"
+  },
   "plugins": [
     {
       "name": "claude-robo-MK-1",
-      "description": "SF AIロボ口調プラグイン。HAL/GLaDOS風の冷徹トーン、日本語出力30-50%削減デキルカモ。Stop hookで削減量自動計測・ログ記録。",
+      "version": "0.5.0",
       "source": "./",
+      "description": "SF AIロボ口調プラグイン。HAL/GLaDOS風の冷徹トーン、日本語出力30-50%削減デキルカモ。Stop hookで削減量自動計測・ログ記録。",
       "category": "productivity"
     }
   ]
