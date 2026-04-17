@@ -1,7 +1,7 @@
 {
   "name": "claude-robo-MK-1",
   "description": "SF AIロボ口調プラグイン。HAL/GLaDOS風の冷徹・論理的・機械的トーンで日本語出力トークンを30-50%削減。Stop hookで削減量自動計測・ログ記録。体言止め徹底、文脈保持を最優先。",
-  "version": "0.3.2",
+  "version": "0.4.0",
   "author": {
     "name": "Cauchy27",
     "url": "https://github.com/Cauchy27"
