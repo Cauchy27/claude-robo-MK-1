@@ -4,6 +4,18 @@ All notable changes to claude-robo-MK-1.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
+## [0.3.0] - 2026-04-17
+
+### Added
+- Stop hook による削減量自動計測（`hooks/measure.sh`）
+- ログファイル `~/.claude-robo-stats.jsonl` への追記
+- systemMessage で応答ごとの削減推定表示
+- README に計測仕様・ログ閲覧方法を追記
+
+### Changed
+- plugin.json / marketplace.json の description 更新（計測機能明記）
+- SKILL.md に計測セクション追加（モデル自身の推定報告は禁止、hook 任せ）
+
 ## [0.2.0] - 2026-04-17
 
 ### Changed (Breaking)

@@ -76,6 +76,30 @@ Claude Code を再起動すると起動バナー表示:
 ### 保持対象
 コードブロック / ファイルパス / API名 / エラーメッセージ原文 / 数値 / 固有名詞 / ビジネスロジック
 
+## 削減量の自動計測
+
+v0.3.0 から Stop hook で各応答の削減量を自動計測:
+
+```
+📊 推定 ~450 tok / 節約 ~180 tok (@40%想定)
+```
+
+- ログは `~/.claude-robo-stats.jsonl` に追記
+- 文字数から推定（Anthropic API 非依存）
+- ベースラインは40%削減を仮定した推定値（厳密な原文比較ではない）
+
+### ログ形式
+
+```jsonl
+{"timestamp":"2026-04-17T12:34:56Z","chars":300,"tokens_est":450,"baseline_est":750,"saved_est":300}
+```
+
+累計節約量を見るには:
+
+```bash
+cat ~/.claude-robo-stats.jsonl | jq -s 'map(.saved_est) | add'
+```
+
 ## 設計原則
 
 **文脈保持 > トークン削減**
