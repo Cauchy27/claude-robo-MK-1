@@ -4,6 +4,23 @@ All notable changes to claude-robo-MK-1.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
+## [0.7.0] - 2026-04-17
+
+### Added
+- **オンデマンド真ノ削減率実測機能**
+  - `/robo-stats` コマンド新設
+  - 自然言語トリガー対応（「実測して」「本当の削減率」等）
+  - 直近3-5件ノロボ応答ヲ文脈カラ抽出 → 通常日本語版ヲ仮想生成 → 両版ノ実トークン数測定
+  - 計測優先順位: `count_tokens` API → tiktoken → 文字数推定
+
+### Changed
+- SKILL.md / README.md ニ オンデマンド実測セクション追加
+- 自動計測ノ `tokens_est` / `saved_est` ニ「推定値」注記明記
+
+### Background
+- 従来ノ自動計測ハ `tokens_est = chars × 1.5` ノ推定ノミデ、ベースラインモ40%削減前提ノ逆算値
+- 真ノ削減率ヲ知リタイ時ニ `/robo-stats` デ実測可能化
+
 ## [0.6.0] - 2026-04-17
 
 ### Added
