@@ -13,7 +13,7 @@ description: 現在のロボ口調モード（hiragana/katakana）を表示
    elif [[ -n "${ROBO_STYLE:-}" ]]; then
      echo "$ROBO_STYLE (env var)"
    else
-     echo "katakana (default)"
+     echo "hiragana (default)"
    fi
    ```
 
@@ -21,7 +21,7 @@ description: 現在のロボ口調モード（hiragana/katakana）を表示
 
 ```
 📊 現在モード: <取得値>
-優先順位: ~/.claude-robo-mode > $ROBO_STYLE > katakana(既定)
+優先順位: ~/.claude-robo-mode > $ROBO_STYLE > hiragana(既定)
 ```
 
 追加説明不要。状態報告のみ。

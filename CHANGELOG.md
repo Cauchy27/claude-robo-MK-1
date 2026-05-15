@@ -4,6 +4,19 @@ All notable changes to claude-robo-MK-1.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
+## [0.8.0] - 2026-05-15
+
+### Changed
+- **既定モードヲ `katakana` カラ `hiragana` ニ変更**
+  - `hooks/activate.sh`: フォールバック反転（`${ROBO_STYLE:-hiragana}` / 不正値ハ `hiragana`）
+  - 既定バナー: `📡 claude-robo-MK-1 起動します`
+  - 優先順位ハ従来通り: `~/.claude-robo-mode` > `$ROBO_STYLE` > `hiragana`（既定）
+- README.md (JP/EN) / SKILL.md / commands/* ノ既定マーク・例示ヲ全面更新
+
+### Migration
+- 既存ユーザーデ `~/.claude-robo-mode` 未設定 & `ROBO_STYLE` 未設定ノ場合、次セッションカラ自動デひらがなモード
+- カタカナ継続希望ナラ: `/robo-katakana` 実行 or `export ROBO_STYLE=katakana`
+
 ## [0.7.0] - 2026-04-17
 
 ### Added

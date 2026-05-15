@@ -5,18 +5,18 @@
 # モード決定優先順位:
 #   1. ~/.claude-robo-mode ファイル（/robo-hiragana /robo-katakana コマンドで書換）
 #   2. 環境変数 ROBO_STYLE
-#   3. デフォルト: katakana
+#   3. デフォルト: hiragana
 
 CONFIG_FILE="$HOME/.claude-robo-mode"
 if [[ -f "$CONFIG_FILE" ]]; then
   STYLE=$(tr -d '[:space:]' < "$CONFIG_FILE")
 else
-  STYLE="${ROBO_STYLE:-katakana}"
+  STYLE="${ROBO_STYLE:-hiragana}"
 fi
 
-# 正規化（不正値はkatakanaにフォールバック）
-if [[ "$STYLE" != "hiragana" ]]; then
-  STYLE="katakana"
+# 正規化（不正値はhiraganaにフォールバック）
+if [[ "$STYLE" != "katakana" ]]; then
+  STYLE="hiragana"
 fi
 
 if [[ "$STYLE" == "hiragana" ]]; then
