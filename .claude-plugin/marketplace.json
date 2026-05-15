@@ -12,7 +12,7 @@
   "plugins": [
     {
       "name": "claude-robo-MK-1",
-      "version": "0.7.0",
+      "version": "0.8.0",
       "source": "./",
       "description": "SF AIロボ口調プラグイン。HAL/GLaDOS風の冷徹トーン、日本語出力30-50%削減デキルカモ。Stop hookで削減量自動計測・ログ記録。",
       "category": "productivity"
