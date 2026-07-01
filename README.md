@@ -231,45 +231,48 @@ cat ~/.claude-robo-stats.jsonl | jq -s 'map(.saved_est) | add'
 | Claude Sonnet 5 | $3.00（イントロ価格 $2.00, 〜2026-08-31） | $15.00（イントロ価格 $10.00） |
 | Claude Haiku 4.5 | $1.00 | $5.00 |
 
-### 試算条件（20応答セッション、モデル別）
+### 試算基準ヲ「セッション数」カラ「トークン数」ヘ変更
 
-同一トークン差分（注入 ~200 tok、SKILL.md ~600 tok、Cache再読 ~20 tok、出力削減 -4,000 tok）を各モデルの単価に当てはめた場合：
+セッション数ハ1セッションあたりノ長サ・往復数ノブレガ大キク（本環境ノ実測デモ30分ギャップ基準デ月92〜267セッショント2倍以上ノ幅）、節約効果ノ指標トシテ不適切ト判断。以下、**出力トークン数ノ実測集計**ヲ基準ニ再構成。
 
-| 項目 | トークン | Fable 5 | Opus 4.8 | Sonnet 5 |
-|------|---------|--------:|---------:|---------:|
-| SessionStart hook 注入 | ~200 tok (input, cached) | $0.0020 | $0.0010 | $0.0006 |
-| SKILL.md (発動時ノミ) | ~600 tok | $0.0060 | $0.0030 | $0.0018 |
-| Cache 再読 (19ターン × 10%) | ~20 tok | $0.0002 | $0.0001 | $0.00006 |
-| 出力削減 | **-4,000 tok (output)** | **-$0.200** | **-$0.100** | **-$0.060** |
-| **ネット節約** | **約 3,800 tok** | **~$0.192/セッション** | **~$0.096/セッション** | **~$0.057/セッション** |
+### 実測削減率（ログ集計ベース）
 
-Sonnet 5 はイントロ価格（$2.00 / $10.00, 〜2026-08-31）適用時は ~$0.038/セッションニ縮小。Haiku 4.5（$1.00 / $5.00）ハ参考値デ ~$0.019/セッション。
+`~/.claude-robo-stats.jsonl` 実測ログ（2026-04-17〜2026-07-01、76日分・5,961応答、Stop hook 自動計測）ヲ直接集計：
 
-### 感度（月100セッション換算）
+| 指標 | 値 |
+|------|---:|
+| baseline_est 合計（通常口調想定出力） | 25,228,307 tok |
+| tokens_est 合計（ロボ実出力） | 15,138,157 tok |
+| saved_est 合計（削減量） | 10,090,150 tok |
+| **実測削減率（saved / baseline）** | **40.0%** |
+| 1応答あたり平均削減量 | 約 1,693 tok（baseline 平均 4,232 tok → 実出力平均 2,540 tok） |
 
-| モデル | 月間節約額 |
-|--------|-----------|
-| Fable 5 | 約 $19 |
-| Opus 4.8 | 約 $10 |
-| Sonnet 5 | 約 $5-6（イントロ価格適用時ハ約 $4） |
-| Haiku 4.5 | 約 $2 |
+「30-50%削減」ノ看板通リ、実測40.0%デ着地確認。
 
-- 長セッション・出力多メ → 効果拡大
-- 短セッション・コード中心 → 効果縮小（コード保護ノタメ）
+### モデル別コスト換算（出力削減トークン基準）
+
+削減トークン（saved_est）ヲ各モデルノ Output 単価デ換算。基準ハ「セッション」デハナク「応答1,000件あたり」（実測平均 1,693 tok/応答 × 1,000）:
+
+| モデル | Output $/MTok | 1,000応答あたり節約額 |
+|--------|---------------:|----------------------:|
+| Fable 5 | $50.00 | 約 $84.6 |
+| Opus 4.8 | $25.00 | 約 $42.3 |
+| Sonnet 5 | $15.00（イントロ $10.00） | 約 $25.4（イントロ 約 $16.9） |
+| Haiku 4.5 | $5.00 | 約 $8.5 |
+
+### 参考：本環境ノ実測ペース換算（月換算）
+
+上記ログハ平均 78.4応答/日（≈2,353応答/月相当）ノペース。コレハ自動テスト・ワークフロー等ヲ含ム集計値デアリ、典型的ナ「手動開発セッション」ノペースト同一視ハデキナイ点、注意（参考値トシテ提示）：
+
+| モデル | 月間節約額（実測ペース ≈2,353応答/月） |
+|--------|----------------------------------------|
+| Fable 5 | 約 $199 |
+| Opus 4.8 | 約 $100 |
+| Sonnet 5 | 約 $60（イントロ価格適用時ハ約 $40） |
+| Haiku 4.5 | 約 $20 |
+
+- 応答数（＝実際ノトークン生成量）ニ比例スルタメ、セッション長・往復頻度ニ左右サレナイ
 - 高単価モデル（Fable 5 / Opus 4.8）ほど絶対額ノ節約効果ハ大キイ
-
-### 実例：開発者（筆者）の場合
-
-`~/.claude-robo-stats.jsonl`（応答ログ 5,958件、2026-04-17〜2026-07-01 ノ76日分）ヲ実測ベースニ、30分以上ノ無操作ギャップヲセッション境界ト見做シテ機械的ニ集計スルト、月間 **約150セッション**（ギャップ閾値ヲ15〜60分デ振ルト92〜267セッション/月ト幅ガ出ル推定値。ログハ本プラグイン発動時ノ応答単位デ複数プロジェクト跨ギ含ムタメ、厳密ナ「開発セッション数」トハ一致セズ、目安トシテ扱ウコト）。
-
-コレヲ基準ニシタ月間節約額（実測150セッション）:
-
-| モデル | 月間節約額（約150セッション） |
-|--------|-----------------------------|
-| Fable 5 | 約 $28.8 |
-| Opus 4.8 | 約 $14.4 |
-| Sonnet 5 | 約 $8.6（イントロ価格適用時ハ約 $5.8） |
-| Haiku 4.5 | 約 $2.9 |
 
 ### 主目的
 
@@ -375,45 +378,48 @@ verb endings, and connectors.
 | Claude Sonnet 5 | $3.00 (intro $2.00, through 2026-08-31) | $15.00 (intro $10.00) |
 | Claude Haiku 4.5 | $1.00 | $5.00 |
 
-### Cost Simulation (20-response session, per model)
+### Basis Changed: Session Count → Token Count
 
-Applying the same token deltas (injection ~200 tok, SKILL.md ~600 tok, cache re-read ~20 tok, output reduction -4,000 tok) to each model's pricing:
+Session count is a poor unit — session length and turn count vary wildly (even in this project's own log, a 30-minute idle-gap heuristic swings between 92 and 267 sessions/month depending on the threshold). Rebuilt below on **measured output token counts** instead.
 
-| Item | Tokens | Fable 5 | Opus 4.8 | Sonnet 5 |
-|------|--------|--------:|---------:|---------:|
-| SessionStart hook injection | ~200 tok (input, cached) | $0.0020 | $0.0010 | $0.0006 |
-| SKILL.md (on trigger only) | ~600 tok | $0.0060 | $0.0030 | $0.0018 |
-| Cache re-read (19 turns × 10%) | ~20 tok | $0.0002 | $0.0001 | $0.00006 |
-| Output reduction | **-4,000 tok (output)** | **-$0.200** | **-$0.100** | **-$0.060** |
-| **Net savings** | **~3,800 tok** | **~$0.192 / session** | **~$0.096 / session** | **~$0.057 / session** |
+### Measured Reduction Rate (from log aggregation)
 
-At Sonnet 5's introductory pricing ($2.00 / $10.00, through 2026-08-31), net savings drop to ~$0.038/session. Haiku 4.5 ($1.00 / $5.00) is included for reference at ~$0.019/session.
+Directly aggregated from `~/.claude-robo-stats.jsonl` (76 days, 2026-04-17 to 2026-07-01, 5,961 responses, auto-logged by the Stop hook):
 
-### Sensitivity (100 sessions / month)
+| Metric | Value |
+|--------|------:|
+| Sum of baseline_est (normal-tone output estimate) | 25,228,307 tok |
+| Sum of tokens_est (actual robo output) | 15,138,157 tok |
+| Sum of saved_est (reduction) | 10,090,150 tok |
+| **Measured reduction rate (saved / baseline)** | **40.0%** |
+| Average reduction per response | ~1,693 tok (baseline avg 4,232 tok → actual avg 2,540 tok) |
 
-| Model | Monthly savings |
-|-------|-----------------|
-| Fable 5 | ~$19 |
-| Opus 4.8 | ~$10 |
-| Sonnet 5 | ~$5-6 (~$4 at intro pricing) |
-| Haiku 4.5 | ~$2 |
+Confirms the "30-50% reduction" claim — measured at 40.0%.
 
-- Long session, heavy output → larger gain
-- Short session, code-heavy → smaller gain (code protected)
+### Per-Model Cost Conversion (output-reduction basis)
+
+Converting the measured saved tokens (saved_est) at each model's Output price. Basis is **per 1,000 responses** (measured average 1,693 tok/response × 1,000), not sessions:
+
+| Model | Output $/MTok | Savings per 1,000 responses |
+|-------|---------------:|------------------------------:|
+| Fable 5 | $50.00 | ~$84.6 |
+| Opus 4.8 | $25.00 | ~$42.3 |
+| Sonnet 5 | $15.00 (intro $10.00) | ~$25.4 (intro ~$16.9) |
+| Haiku 4.5 | $5.00 | ~$8.5 |
+
+### Reference: Monthly Extrapolation at This Environment's Measured Pace
+
+The log above averages 78.4 responses/day (≈2,353 responses/month). This includes automated tests and workflow runs — it should **not** be conflated with a typical manual dev-session pace, and is shown for reference only:
+
+| Model | Monthly savings (measured pace, ≈2,353 responses/month) |
+|-------|-----------------------------------------------------------|
+| Fable 5 | ~$199 |
+| Opus 4.8 | ~$100 |
+| Sonnet 5 | ~$60 (intro pricing: ~$40) |
+| Haiku 4.5 | ~$20 |
+
+- Scales with response count — i.e. actual token generation volume — not session length or turn frequency
 - Higher-priced models (Fable 5 / Opus 4.8) show larger absolute savings
-
-### Real Example: The Developer's (Author's) Case
-
-Based on `~/.claude-robo-stats.jsonl` (5,958 response log entries spanning 76 days, 2026-04-17 to 2026-07-01), clustering entries with a 30-minute-or-longer idle gap as a session boundary gives roughly **150 sessions/month** (this estimate is sensitive to the gap threshold — sweeping 15–60 minutes yields a range of 92–267 sessions/month. The log records per-response activations of this plugin across multiple projects, so it's an approximation, not an exact "dev session count").
-
-Monthly savings at this measured rate (~150 sessions):
-
-| Model | Monthly savings (~150 sessions) |
-|-------|----------------------------------|
-| Fable 5 | ~$28.8 |
-| Opus 4.8 | ~$14.4 |
-| Sonnet 5 | ~$8.6 (~$5.8 at intro pricing) |
-| Haiku 4.5 | ~$2.9 |
 
 ### Primary Purpose
 
