@@ -274,6 +274,19 @@ cat ~/.claude-robo-stats.jsonl | jq -s 'map(.saved_est) | add'
 - 応答数（＝実際ノトークン生成量）ニ比例スルタメ、セッション長・往復頻度ニ左右サレナイ
 - 高単価モデル（Fable 5 / Opus 4.8）ほど絶対額ノ節約効果ハ大キイ
 
+### ヘビーユーザー換算（実測ピーク基準）
+
+「実測ペース平均」ハ閑散日モ含ムタメ、フル稼働時ノ上限目安トシテ**アクティブ日ノ上位25%（繁忙日）ノ平均ペース**デ再計算：繁忙日平均 約197応答/日 → 月換算 約5,910応答、削減トークン 約1,000万tok/月。
+
+| モデル | 月間節約額（ヘビー使用、約5,910応答/月） |
+|--------|--------------------------------------------|
+| Fable 5 | 約 $500 |
+| Opus 4.8 | 約 $250 |
+| Sonnet 5 | 約 $150（イントロ価格適用時ハ約 $100） |
+| Haiku 4.5 | 約 $50 |
+
+コレガ「実測データ上ノ最ヘビーケース」。日常的ニコレダケ使エバ月$50〜$500ノレンジ（モデル依存）ニ到達スル計算ダガ、上記ペースハ自動処理込ミノ実測値デアリ、純粋ナ手動対話ダケデハコレヨリ低ク見積モルベキ。
+
 ### 主目的
 
 金銭節約 < **情報密度向上 + ドッグフーディング + キャラクター性**
@@ -420,6 +433,19 @@ The log above averages 78.4 responses/day (≈2,353 responses/month). This inclu
 
 - Scales with response count — i.e. actual token generation volume — not session length or turn frequency
 - Higher-priced models (Fable 5 / Opus 4.8) show larger absolute savings
+
+### Heavy-Usage Conversion (measured peak basis)
+
+The full-period average includes quiet days, so as an upper-bound "if you go all-in" estimate, recompute using **the average pace of the busiest 25% of active days**: ~197 responses/day on busy days → ~5,910 responses/month, ~10 million saved tokens/month.
+
+| Model | Monthly savings (heavy usage, ~5,910 responses/month) |
+|-------|-----------------------------------------------------------|
+| Fable 5 | ~$500 |
+| Opus 4.8 | ~$250 |
+| Sonnet 5 | ~$150 (intro pricing: ~$100) |
+| Haiku 4.5 | ~$50 |
+
+This is the heaviest case the measured data supports — sustaining this pace daily lands you in the $50–$500/month range depending on model. Note this pace itself includes automated processing; pure manual-conversation usage alone would likely land lower.
 
 ### Primary Purpose
 
