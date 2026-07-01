@@ -264,43 +264,52 @@ SAVED_EST=$(( BASELINE_EST - TOKEN_EST ))
 
 「30-50%」ノ看板ノ**下限寄リ**、自動ログノ仮定値（40%）ヨリモ**低メ**ニ出タ。以下ノ$試算ハ自動ログ仮定値（40%）ベースノママ残スガ、実際ハコレヨリ小サイ可能性ガアル点、注意。
 
-### モデル別コスト換算（出力削減トークン基準・自動ログ仮定40%ベース）
+### モデル別コスト換算（`/robo-stats` 実測29.4%ベース・訂正版）
 
-削減トークン（saved_est）ヲ各モデルノ Output 単価デ換算。基準ハ「セッション」デハナク「応答1,000件あたり」（実測平均 1,693 tok/応答 × 1,000）:
+自動ログ仮定（40%）デハナク、**`/robo-stats` 実測値（約29.4%）**ヲ使用シ再計算。ロボ実出力ノ総量（`tokens_est` 合計 15,138,157 tok、コレ自体ハ文字数ベースノ実出力推定デ信頼度アリ）ニ対シ、削減率29.4%ヲ適用シタ場合ノ推定ベースライン・削減量ヲ算出：
+
+| 指標 | 値 |
+|------|---:|
+| 実出力合計（tokens_est） | 15,138,157 tok |
+| 推定ベースライン（29.4%仮定） | 約 21,442,149 tok |
+| 推定削減量 | 約 6,303,992 tok |
+| 1応答あたり平均削減量 | 約 1,058 tok |
+
+コレヲ各モデルノ Output 単価デ換算（基準ハ「応答1,000件あたり」）:
 
 | モデル | Output $/MTok | 1,000応答あたり節約額 |
 |--------|---------------:|----------------------:|
-| Fable 5 | $50.00 | 約 $84.6 |
-| Opus 4.8 | $25.00 | 約 $42.3 |
-| Sonnet 5 | $15.00（イントロ $10.00） | 約 $25.4（イントロ 約 $16.9） |
-| Haiku 4.5 | $5.00 | 約 $8.5 |
+| Fable 5 | $50.00 | 約 $52.9 |
+| Opus 4.8 | $25.00 | 約 $26.4 |
+| Sonnet 5 | $15.00（イントロ $10.00） | 約 $15.9（イントロ 約 $10.6） |
+| Haiku 4.5 | $5.00 | 約 $5.3 |
 
-### 参考：本環境ノ実測ペース換算（月換算）
+### 参考：本環境ノ実測ペース換算（月換算、29.4%ベース）
 
 上記ログハ平均 78.4応答/日（≈2,353応答/月相当）ノペース。コレハ自動テスト・ワークフロー等ヲ含ム集計値デアリ、典型的ナ「手動開発セッション」ノペースト同一視ハデキナイ点、注意（参考値トシテ提示）：
 
 | モデル | 月間節約額（実測ペース ≈2,353応答/月） |
 |--------|----------------------------------------|
-| Fable 5 | 約 $199 |
-| Opus 4.8 | 約 $100 |
-| Sonnet 5 | 約 $60（イントロ価格適用時ハ約 $40） |
-| Haiku 4.5 | 約 $20 |
+| Fable 5 | 約 $124 |
+| Opus 4.8 | 約 $62 |
+| Sonnet 5 | 約 $37（イントロ価格適用時ハ約 $25） |
+| Haiku 4.5 | 約 $12 |
 
 - 応答数（＝実際ノトークン生成量）ニ比例スルタメ、セッション長・往復頻度ニ左右サレナイ
 - 高単価モデル（Fable 5 / Opus 4.8）ほど絶対額ノ節約効果ハ大キイ
 
-### ヘビーユーザー換算（実測ピーク基準）
+### ヘビーユーザー換算（実測ピーク基準、29.4%ベース）
 
-「実測ペース平均」ハ閑散日モ含ムタメ、フル稼働時ノ上限目安トシテ**アクティブ日ノ上位25%（繁忙日）ノ平均ペース**デ再計算：繁忙日平均 約197応答/日 → 月換算 約5,910応答、削減トークン 約1,000万tok/月。
+「実測ペース平均」ハ閑散日モ含ムタメ、フル稼働時ノ上限目安トシテ**アクティブ日ノ上位25%（繁忙日）ノ平均ペース**デ再計算：繁忙日平均 約197応答/日 → 月換算 約5,910応答。
 
 | モデル | 月間節約額（ヘビー使用、約5,910応答/月） |
 |--------|--------------------------------------------|
-| Fable 5 | 約 $500 |
-| Opus 4.8 | 約 $250 |
-| Sonnet 5 | 約 $150（イントロ価格適用時ハ約 $100） |
-| Haiku 4.5 | 約 $50 |
+| Fable 5 | 約 $313 |
+| Opus 4.8 | 約 $156 |
+| Sonnet 5 | 約 $94（イントロ価格適用時ハ約 $63） |
+| Haiku 4.5 | 約 $31 |
 
-コレガ「実測データ上ノ最ヘビーケース」。日常的ニコレダケ使エバ月$50〜$500ノレンジ（モデル依存）ニ到達スル計算ダガ、上記ペースハ自動処理込ミノ実測値デアリ、純粋ナ手動対話ダケデハコレヨリ低ク見積モルベキ。
+コレガ「実測データ上ノ最ヘビーケース」。日常的ニコレダケ使エバ月$31〜$313ノレンジ（モデル依存）ニ到達スル計算ダガ、上記ペースハ自動処理込ミノ実測値デアリ、純粋ナ手動対話ダケデハコレヨリ低ク見積モルベキ。5サンプルノミノ推定値ナノデ、実際ノ削減率ガコレヨリ上下スレバ本表モ比例シテ変動スル。
 
 ### 重要：削減対象ハ「応答内ノ地ノ文」ノミ
 
@@ -453,43 +462,52 @@ Method: **estimate** (character-based, method C — lower precision than an API 
 
 This lands at the **low end** of the claimed "30-50%" range, and **below** the auto-log's assumed 40%. The dollar tables below still use the auto-log's assumed 40% basis; the real figure may be smaller.
 
-### Per-Model Cost Conversion (output-reduction basis, auto-log's assumed 40%)
+### Per-Model Cost Conversion (corrected: `/robo-stats` measured 29.4%)
 
-Converting the measured saved tokens (saved_est) at each model's Output price. Basis is **per 1,000 responses** (measured average 1,693 tok/response × 1,000), not sessions:
+Recalculated using the **`/robo-stats` measured rate (~29.4%)** instead of the auto-log's assumed 40%. Applying that rate to the real total output volume (`tokens_est` sum, 15,138,157 tok — itself a character-based estimate of actual output, reasonably trustworthy) gives an estimated counterfactual baseline and savings:
+
+| Metric | Value |
+|--------|------:|
+| Total actual output (tokens_est) | 15,138,157 tok |
+| Estimated baseline (at 29.4%) | ~21,442,149 tok |
+| Estimated savings | ~6,303,992 tok |
+| Average reduction per response | ~1,058 tok |
+
+Converted at each model's Output price, basis **per 1,000 responses**:
 
 | Model | Output $/MTok | Savings per 1,000 responses |
 |-------|---------------:|------------------------------:|
-| Fable 5 | $50.00 | ~$84.6 |
-| Opus 4.8 | $25.00 | ~$42.3 |
-| Sonnet 5 | $15.00 (intro $10.00) | ~$25.4 (intro ~$16.9) |
-| Haiku 4.5 | $5.00 | ~$8.5 |
+| Fable 5 | $50.00 | ~$52.9 |
+| Opus 4.8 | $25.00 | ~$26.4 |
+| Sonnet 5 | $15.00 (intro $10.00) | ~$15.9 (intro ~$10.6) |
+| Haiku 4.5 | $5.00 | ~$5.3 |
 
-### Reference: Monthly Extrapolation at This Environment's Measured Pace
+### Reference: Monthly Extrapolation at This Environment's Measured Pace (29.4% basis)
 
 The log above averages 78.4 responses/day (≈2,353 responses/month). This includes automated tests and workflow runs — it should **not** be conflated with a typical manual dev-session pace, and is shown for reference only:
 
 | Model | Monthly savings (measured pace, ≈2,353 responses/month) |
 |-------|-----------------------------------------------------------|
-| Fable 5 | ~$199 |
-| Opus 4.8 | ~$100 |
-| Sonnet 5 | ~$60 (intro pricing: ~$40) |
-| Haiku 4.5 | ~$20 |
+| Fable 5 | ~$124 |
+| Opus 4.8 | ~$62 |
+| Sonnet 5 | ~$37 (intro pricing: ~$25) |
+| Haiku 4.5 | ~$12 |
 
 - Scales with response count — i.e. actual token generation volume — not session length or turn frequency
 - Higher-priced models (Fable 5 / Opus 4.8) show larger absolute savings
 
-### Heavy-Usage Conversion (measured peak basis)
+### Heavy-Usage Conversion (measured peak basis, 29.4% basis)
 
-The full-period average includes quiet days, so as an upper-bound "if you go all-in" estimate, recompute using **the average pace of the busiest 25% of active days**: ~197 responses/day on busy days → ~5,910 responses/month, ~10 million saved tokens/month.
+The full-period average includes quiet days, so as an upper-bound "if you go all-in" estimate, recompute using **the average pace of the busiest 25% of active days**: ~197 responses/day on busy days → ~5,910 responses/month.
 
 | Model | Monthly savings (heavy usage, ~5,910 responses/month) |
 |-------|-----------------------------------------------------------|
-| Fable 5 | ~$500 |
-| Opus 4.8 | ~$250 |
-| Sonnet 5 | ~$150 (intro pricing: ~$100) |
-| Haiku 4.5 | ~$50 |
+| Fable 5 | ~$313 |
+| Opus 4.8 | ~$156 |
+| Sonnet 5 | ~$94 (intro pricing: ~$63) |
+| Haiku 4.5 | ~$31 |
 
-This is the heaviest case the measured data supports — sustaining this pace daily lands you in the $50–$500/month range depending on model. Note this pace itself includes automated processing; pure manual-conversation usage alone would likely land lower.
+This is the heaviest case the measured data supports — sustaining this pace lands you in the $31–$313/month range depending on model. Note this pace itself includes automated processing, so pure manual-conversation usage alone would likely land lower. This is also based on a 5-sample estimate — if the true reduction rate differs, this table scales proportionally.
 
 ### Important: only response prose is compressed
 
