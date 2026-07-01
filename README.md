@@ -235,21 +235,36 @@ cat ~/.claude-robo-stats.jsonl | jq -s 'map(.saved_est) | add'
 
 セッション数ハ1セッションあたりノ長サ・往復数ノブレガ大キク（本環境ノ実測デモ30分ギャップ基準デ月92〜267セッショント2倍以上ノ幅）、節約効果ノ指標トシテ不適切ト判断。以下、**出力トークン数ノ実測集計**ヲ基準ニ再構成。
 
-### 実測削減率（ログ集計ベース）
+### ⚠️ 訂正：自動ログノ「40.0%」ハ実測デハナイ
 
-`~/.claude-robo-stats.jsonl` 実測ログ（2026-04-17〜2026-07-01、76日分・5,961応答、Stop hook 自動計測）ヲ直接集計：
+前バージョンデ「実測削減率40.0%」ト記載シテイタガ、`hooks/measure.sh` ノ実装ヲ確認シタ結果、コレハ**測定値デハナク固定仮定**ダト判明。該当ロジック：
 
-| 指標 | 値 |
-|------|---:|
-| baseline_est 合計（通常口調想定出力） | 25,228,307 tok |
-| tokens_est 合計（ロボ実出力） | 15,138,157 tok |
-| saved_est 合計（削減量） | 10,090,150 tok |
-| **実測削減率（saved / baseline）** | **40.0%** |
-| 1応答あたり平均削減量 | 約 1,693 tok（baseline 平均 4,232 tok → 実出力平均 2,540 tok） |
+```bash
+# ベースライン推定（40%削減想定 → baseline = output / 0.6 ≈ output * 5/3）
+BASELINE_EST=$(( TOKEN_EST * 5 / 3 ))
+SAVED_EST=$(( BASELINE_EST - TOKEN_EST ))
+```
 
-「30-50%削減」ノ看板通リ、実測40.0%デ着地確認。
+`baseline_est` ハ実出力（`tokens_est`）ニ常ニ `5/3` ヲ掛ケタ値ニ過ギズ、`saved_est / baseline_est` ハ入力内容ニ関係ナク**常ニ厳密ニ40.0%**ニナル（循環計算）。76日分ノログ集計デ「40.0%」ト出タノハ、5,961件ノ応答内容ヲ反映シタ結果デハナク、計算式ガソウ作ラレテイルカラ。訂正・陳謝。
 
-### モデル別コスト換算（出力削減トークン基準）
+### 実測（オンデマンド `/robo-stats`、本セッション5件サンプル）
+
+`/robo-stats` コマンドデ、本会話内ノロボ応答5件ヲ抽出→通常口調版ヲ仮想生成→文字数ベース推定（トークンカウントAPI・tiktoken共ニ本環境デ利用不可ノタメ method C: 日本語1.5tok/字、英数字0.25tok/字）デ比較：
+
+| # | ロボ版 tok | 通常版 tok | 削減率 |
+|---|---------:|---------:|-------:|
+| 1 | 217 | 302 | 28.1% |
+| 2 | 126 | 194 | 35.1% |
+| 3 | 307 | 472 | 35.0% |
+| 4 | 280 | 409 | 31.5% |
+| 5 | 316 | 381 | 17.1% |
+| **平均** | - | - | **約29.4%** |
+
+計測方式：**推定**（文字数ベース、method C。API実測・tiktokenヨリ精度低）。サンプル5件・本セッション限定、長期傾向トハ限ラナイ。
+
+「30-50%」ノ看板ノ**下限寄リ**、自動ログノ仮定値（40%）ヨリモ**低メ**ニ出タ。以下ノ$試算ハ自動ログ仮定値（40%）ベースノママ残スガ、実際ハコレヨリ小サイ可能性ガアル点、注意。
+
+### モデル別コスト換算（出力削減トークン基準・自動ログ仮定40%ベース）
 
 削減トークン（saved_est）ヲ各モデルノ Output 単価デ換算。基準ハ「セッション」デハナク「応答1,000件あたり」（実測平均 1,693 tok/応答 × 1,000）:
 
@@ -286,6 +301,20 @@ cat ~/.claude-robo-stats.jsonl | jq -s 'map(.saved_est) | add'
 | Haiku 4.5 | 約 $50 |
 
 コレガ「実測データ上ノ最ヘビーケース」。日常的ニコレダケ使エバ月$50〜$500ノレンジ（モデル依存）ニ到達スル計算ダガ、上記ペースハ自動処理込ミノ実測値デアリ、純粋ナ手動対話ダケデハコレヨリ低ク見積モルベキ。
+
+### 重要：削減対象ハ「応答内ノ地ノ文」ノミ
+
+体感ト数値ガ乖離スル最大ノ理由：本プラグインガ圧縮スルノハ**アシスタント応答内ノ自然言語ノ地ノ文（プロース部分）ノミ**。以下ハ**保持対象**デ、一切圧縮サレナイ：
+
+- コードブロック・ファイルパス・API名・エラーメッセージ原文
+- ツール呼出シ（tool_use / tool_result）
+- ファイル読込ミ内容・検索結果等、コンテキストトシテ再送信サレル入力トークン全般
+
+アジェンティックなコーディング作業デハ、1ターンアタリノトークン消費ノ大半ハ**入力側**（会話履歴ノ再送信・ファイル内容・ツール結果）ガ占メ、地ノ文ノ出力ハ全体ノホンノ一部ニ過ギナイコトガ多イ。「1回デ数百万トークン使ッテイル気ガスル」ト感ジルノハ、コノ入力側ノ再送信コスト（本プラグインノ削減対象外）ヲ体感シテイル可能性ガ高イ。ツマリ、地ノ文ヲ30-40%圧縮シテモ、**セッション全体ノトークン消費ニ占メル割合ハ極メテ小サイ**。
+
+### 週間利用上限（サブスクリプションプラン）ヲ考慮スル場合
+
+従量課金APIデハナクClaude Pro/Max等ノ週間利用上限付キプランヲ利用中ナラ、評価軸ハ「$節約額」デハナク「週間枠内デドレダケ余裕ガ増エルカ」ニナル。上記ノ理由（入力トークンハ非圧縮）カラ、**週間トークン消費ニ占メル削減分ノ割合ハ、$換算ト同様ニ小サイ**ト推定サレル——地ノ文ガ週間消費全体ニ占メル比率ニ比例スルタメ。正確ナ内訳（入力/出力比率）ハユーザー環境依存デ本リポジトリ側カラハ把握不能。実際ノ週間利用状況ハ Claude Code / claude.ai ノ利用状況画面（`/usage` 等）デ確認スルコトヲ推奨。
 
 ### 主目的
 
@@ -395,21 +424,36 @@ verb endings, and connectors.
 
 Session count is a poor unit — session length and turn count vary wildly (even in this project's own log, a 30-minute idle-gap heuristic swings between 92 and 267 sessions/month depending on the threshold). Rebuilt below on **measured output token counts** instead.
 
-### Measured Reduction Rate (from log aggregation)
+### ⚠️ Correction: the auto-log's "40.0%" is NOT measured
 
-Directly aggregated from `~/.claude-robo-stats.jsonl` (76 days, 2026-04-17 to 2026-07-01, 5,961 responses, auto-logged by the Stop hook):
+A prior version of this README stated "measured reduction rate: 40.0%." Inspecting `hooks/measure.sh` reveals this is **not a measurement — it's a fixed assumption baked into the formula**:
 
-| Metric | Value |
-|--------|------:|
-| Sum of baseline_est (normal-tone output estimate) | 25,228,307 tok |
-| Sum of tokens_est (actual robo output) | 15,138,157 tok |
-| Sum of saved_est (reduction) | 10,090,150 tok |
-| **Measured reduction rate (saved / baseline)** | **40.0%** |
-| Average reduction per response | ~1,693 tok (baseline avg 4,232 tok → actual avg 2,540 tok) |
+```bash
+# Baseline estimate (assumes 40% reduction → baseline = output / 0.6 ≈ output * 5/3)
+BASELINE_EST=$(( TOKEN_EST * 5 / 3 ))
+SAVED_EST=$(( BASELINE_EST - TOKEN_EST ))
+```
 
-Confirms the "30-50% reduction" claim — measured at 40.0%.
+`baseline_est` is always `tokens_est × 5/3`, so `saved_est / baseline_est` is **always exactly 40.0%** regardless of the actual response content — it's circular. Aggregating 76 days of log entries and getting "40.0%" reflects the formula, not the content of those 5,961 responses. Correction and apology for the earlier claim.
 
-### Per-Model Cost Conversion (output-reduction basis)
+### Measured (on-demand `/robo-stats`, 5 samples from this session)
+
+Using `/robo-stats`: extracted 5 robo-toned responses from this conversation, generated a counterfactual "normal tone" version of each, and compared character-based token estimates (neither the count_tokens API nor tiktoken was available in this environment, so method C: 1.5 tok/char for Japanese, 0.25 tok/char for alphanumeric):
+
+| # | Robo tok | Normal tok | Reduction |
+|---|---------:|---------:|-------:|
+| 1 | 217 | 302 | 28.1% |
+| 2 | 126 | 194 | 35.1% |
+| 3 | 307 | 472 | 35.0% |
+| 4 | 280 | 409 | 31.5% |
+| 5 | 316 | 381 | 17.1% |
+| **Average** | - | - | **~29.4%** |
+
+Method: **estimate** (character-based, method C — lower precision than an API count or tiktoken). 5 samples, this session only — not necessarily representative of long-term behavior.
+
+This lands at the **low end** of the claimed "30-50%" range, and **below** the auto-log's assumed 40%. The dollar tables below still use the auto-log's assumed 40% basis; the real figure may be smaller.
+
+### Per-Model Cost Conversion (output-reduction basis, auto-log's assumed 40%)
 
 Converting the measured saved tokens (saved_est) at each model's Output price. Basis is **per 1,000 responses** (measured average 1,693 tok/response × 1,000), not sessions:
 
@@ -446,6 +490,20 @@ The full-period average includes quiet days, so as an upper-bound "if you go all
 | Haiku 4.5 | ~$50 |
 
 This is the heaviest case the measured data supports — sustaining this pace daily lands you in the $50–$500/month range depending on model. Note this pace itself includes automated processing; pure manual-conversation usage alone would likely land lower.
+
+### Important: only response prose is compressed
+
+The biggest reason the felt impact and the numbers diverge: this plugin only compresses **the assistant's natural-language prose inside a response**. Everything below is **protected** and never compressed:
+
+- Code blocks, file paths, API names, verbatim error messages
+- Tool calls (tool_use / tool_result)
+- File contents, search results, and every other resent input token
+
+In agentic coding work, most per-turn token spend is on the **input** side — resent conversation history, file contents, tool results — while the prose output is often a small slice of the total. If it feels like "I'm burning hundreds of millions of tokens in one go," that's very likely the input-side resend cost (outside this plugin's scope), not the output text. So even a genuine 30–40% cut on the prose slice is a **tiny fraction of total session token spend**.
+
+### If you're on a weekly usage cap (subscription plans)
+
+On Claude Pro/Max or similar weekly-cap plans (not pay-per-token), the relevant question isn't "$ saved" but "how much more headroom does this buy within my weekly quota." For the same reason as above (input tokens are untouched), **the proportion of weekly quota freed up is likely similarly small** — it scales with how much of your weekly consumption is prose output versus input. The actual input/output ratio is account- and workload-specific and can't be determined from this repo; check your real usage breakdown via Claude Code / claude.ai's usage view (e.g. `/usage`).
 
 ### Primary Purpose
 
