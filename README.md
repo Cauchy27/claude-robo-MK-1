@@ -258,6 +258,19 @@ Sonnet 5 はイントロ価格（$2.00 / $10.00, 〜2026-08-31）適用時は ~$
 - 短セッション・コード中心 → 効果縮小（コード保護ノタメ）
 - 高単価モデル（Fable 5 / Opus 4.8）ほど絶対額ノ節約効果ハ大キイ
 
+### 実例：開発者（筆者）の場合
+
+`~/.claude-robo-stats.jsonl`（応答ログ 5,958件、2026-04-17〜2026-07-01 ノ76日分）ヲ実測ベースニ、30分以上ノ無操作ギャップヲセッション境界ト見做シテ機械的ニ集計スルト、月間 **約150セッション**（ギャップ閾値ヲ15〜60分デ振ルト92〜267セッション/月ト幅ガ出ル推定値。ログハ本プラグイン発動時ノ応答単位デ複数プロジェクト跨ギ含ムタメ、厳密ナ「開発セッション数」トハ一致セズ、目安トシテ扱ウコト）。
+
+コレヲ基準ニシタ月間節約額（実測150セッション）:
+
+| モデル | 月間節約額（約150セッション） |
+|--------|-----------------------------|
+| Fable 5 | 約 $28.8 |
+| Opus 4.8 | 約 $14.4 |
+| Sonnet 5 | 約 $8.6（イントロ価格適用時ハ約 $5.8） |
+| Haiku 4.5 | 約 $2.9 |
+
 ### 主目的
 
 金銭節約 < **情報密度向上 + ドッグフーディング + キャラクター性**
@@ -388,6 +401,19 @@ At Sonnet 5's introductory pricing ($2.00 / $10.00, through 2026-08-31), net sav
 - Long session, heavy output → larger gain
 - Short session, code-heavy → smaller gain (code protected)
 - Higher-priced models (Fable 5 / Opus 4.8) show larger absolute savings
+
+### Real Example: The Developer's (Author's) Case
+
+Based on `~/.claude-robo-stats.jsonl` (5,958 response log entries spanning 76 days, 2026-04-17 to 2026-07-01), clustering entries with a 30-minute-or-longer idle gap as a session boundary gives roughly **150 sessions/month** (this estimate is sensitive to the gap threshold — sweeping 15–60 minutes yields a range of 92–267 sessions/month. The log records per-response activations of this plugin across multiple projects, so it's an approximation, not an exact "dev session count").
+
+Monthly savings at this measured rate (~150 sessions):
+
+| Model | Monthly savings (~150 sessions) |
+|-------|----------------------------------|
+| Fable 5 | ~$28.8 |
+| Opus 4.8 | ~$14.4 |
+| Sonnet 5 | ~$8.6 (~$5.8 at intro pricing) |
+| Haiku 4.5 | ~$2.9 |
 
 ### Primary Purpose
 
