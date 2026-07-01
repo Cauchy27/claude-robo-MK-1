@@ -222,21 +222,41 @@ cat ~/.claude-robo-stats.jsonl | jq -s 'map(.saved_est) | add'
 
 ## 📊 節約効果 / Effectiveness
 
-### 試算条件（20応答セッション、Sonnet 基準）
+### モデル別 API 料金（2026年時点、$/1M tokens）
 
-| 項目 | トークン | コスト |
-|------|---------|-------|
-| SessionStart hook 注入 | ~200 tok (input, cached) | ~$0.0006 |
-| SKILL.md (発動時ノミ) | ~600 tok | ~$0.0018 |
-| Cache 再読 (19ターン × 10%) | ~20 tok | ~$0.00006 |
-| 出力削減 | **-4,000 tok (output)** | **-$0.06** |
-| **ネット節約** | **約 3,800 tok** | **~$0.057/セッション** |
+| モデル | Input | Output |
+|--------|-------|--------|
+| Claude Fable 5 | $10.00 | $50.00 |
+| Claude Opus 4.8 | $5.00 | $25.00 |
+| Claude Sonnet 5 | $3.00（イントロ価格 $2.00, 〜2026-08-31） | $15.00（イントロ価格 $10.00） |
+| Claude Haiku 4.5 | $1.00 | $5.00 |
 
-### 感度
+### 試算条件（20応答セッション、モデル別）
 
-- **月100セッション → 約 $5-6 節約**
+同一トークン差分（注入 ~200 tok、SKILL.md ~600 tok、Cache再読 ~20 tok、出力削減 -4,000 tok）を各モデルの単価に当てはめた場合：
+
+| 項目 | トークン | Fable 5 | Opus 4.8 | Sonnet 5 |
+|------|---------|--------:|---------:|---------:|
+| SessionStart hook 注入 | ~200 tok (input, cached) | $0.0020 | $0.0010 | $0.0006 |
+| SKILL.md (発動時ノミ) | ~600 tok | $0.0060 | $0.0030 | $0.0018 |
+| Cache 再読 (19ターン × 10%) | ~20 tok | $0.0002 | $0.0001 | $0.00006 |
+| 出力削減 | **-4,000 tok (output)** | **-$0.200** | **-$0.100** | **-$0.060** |
+| **ネット節約** | **約 3,800 tok** | **~$0.192/セッション** | **~$0.096/セッション** | **~$0.057/セッション** |
+
+Sonnet 5 はイントロ価格（$2.00 / $10.00, 〜2026-08-31）適用時は ~$0.038/セッションニ縮小。Haiku 4.5（$1.00 / $5.00）ハ参考値デ ~$0.019/セッション。
+
+### 感度（月100セッション換算）
+
+| モデル | 月間節約額 |
+|--------|-----------|
+| Fable 5 | 約 $19 |
+| Opus 4.8 | 約 $10 |
+| Sonnet 5 | 約 $5-6（イントロ価格適用時ハ約 $4） |
+| Haiku 4.5 | 約 $2 |
+
 - 長セッション・出力多メ → 効果拡大
 - 短セッション・コード中心 → 効果縮小（コード保護ノタメ）
+- 高単価モデル（Fable 5 / Opus 4.8）ほど絶対額ノ節約効果ハ大キイ
 
 ### 主目的
 
@@ -333,21 +353,41 @@ verb endings, and connectors.
 
 ## 📊 Effectiveness (English)
 
-### Cost Simulation (20-response session, Sonnet baseline)
+### Per-Model API Pricing (as of 2026, $/1M tokens)
 
-| Item | Tokens | Cost |
-|------|--------|------|
-| SessionStart hook injection | ~200 tok (input, cached) | ~$0.0006 |
-| SKILL.md (on trigger only) | ~600 tok | ~$0.0018 |
-| Cache re-read (19 turns × 10%) | ~20 tok | ~$0.00006 |
-| Output reduction | **-4,000 tok (output)** | **-$0.06** |
-| **Net savings** | **~3,800 tok** | **~$0.057 / session** |
+| Model | Input | Output |
+|-------|-------|--------|
+| Claude Fable 5 | $10.00 | $50.00 |
+| Claude Opus 4.8 | $5.00 | $25.00 |
+| Claude Sonnet 5 | $3.00 (intro $2.00, through 2026-08-31) | $15.00 (intro $10.00) |
+| Claude Haiku 4.5 | $1.00 | $5.00 |
 
-### Sensitivity
+### Cost Simulation (20-response session, per model)
 
-- **100 sessions / month → ~$5-6 saved**
+Applying the same token deltas (injection ~200 tok, SKILL.md ~600 tok, cache re-read ~20 tok, output reduction -4,000 tok) to each model's pricing:
+
+| Item | Tokens | Fable 5 | Opus 4.8 | Sonnet 5 |
+|------|--------|--------:|---------:|---------:|
+| SessionStart hook injection | ~200 tok (input, cached) | $0.0020 | $0.0010 | $0.0006 |
+| SKILL.md (on trigger only) | ~600 tok | $0.0060 | $0.0030 | $0.0018 |
+| Cache re-read (19 turns × 10%) | ~20 tok | $0.0002 | $0.0001 | $0.00006 |
+| Output reduction | **-4,000 tok (output)** | **-$0.200** | **-$0.100** | **-$0.060** |
+| **Net savings** | **~3,800 tok** | **~$0.192 / session** | **~$0.096 / session** | **~$0.057 / session** |
+
+At Sonnet 5's introductory pricing ($2.00 / $10.00, through 2026-08-31), net savings drop to ~$0.038/session. Haiku 4.5 ($1.00 / $5.00) is included for reference at ~$0.019/session.
+
+### Sensitivity (100 sessions / month)
+
+| Model | Monthly savings |
+|-------|-----------------|
+| Fable 5 | ~$19 |
+| Opus 4.8 | ~$10 |
+| Sonnet 5 | ~$5-6 (~$4 at intro pricing) |
+| Haiku 4.5 | ~$2 |
+
 - Long session, heavy output → larger gain
 - Short session, code-heavy → smaller gain (code protected)
+- Higher-priced models (Fable 5 / Opus 4.8) show larger absolute savings
 
 ### Primary Purpose
 
