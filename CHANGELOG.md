@@ -4,6 +4,26 @@ All notable changes to claude-robo-MK-1.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
+## [0.8.1] - 2026-07-02
+
+### Fixed
+- **README 節約効果セクションノ全面監査・訂正**（マルチエージェント監査 → 全所見修正 → 再監査パス）
+  - 自動ログノ「実測削減率40.0%」ハ `baseline_est = tokens_est × 5/3` ノ固定式ニヨル循環計算ダッタ点ヲ訂正（応答単位39.4〜40.0%、集計39.9953%）
+  - `/robo-stats` 実測29.4%ハ看板「30-50%」レンジヲ下回ル（レンジ外）ト正確ニ表記。n=5・観測レンジ17.1〜35.1%・自己生成反事実ノ両方向バイアスヲ明記
+  - 全$試算ヲ29.4%実測ベースニ統一再計算、集計値ニ2026-07-01スナップショット（5,961件）ヲ明示、ヘビーユーザー表ノ別時点データ混在ヲ解消
+  - Load Architecture ノトークン概算ヲ実測化: SessionStart注入 約300 tok（注入文329字）、SKILL.md 約4,500 tok（tiktoken実測4,463）
+  - marketplace.json ノ「Stop hookで実測」→「自動推定ログ」ニ是正（実測デハナク推定ノタメ）
+- 週間利用上限プランノ記述ヲ「方向ノミ主張・大キサハ `/usage` デ各自確認」ニ軟化
+
+### Added
+- 節約効果セクション冒頭ニ適用範囲免責（地ノ文限定・thinking/tool_use 非圧縮・上限寄リノ目安）— 日英両方
+- 「自動計測ノ既知ノ限界」: Stop hook ハ最終 assistant メッセージノミ捕捉（地ノ文カバレッジ約30〜70%）、全文字一律1.5tok/字換算ニヨルコード混在時ノ過大（5〜30%）
+- 「入力側複利効果」セクション: 履歴再送信デ削減ガ O(N²) ニ累積、prompt caching デ約1/10減衰、キャッシュ有リ長セッションデ$表ノ約1.5〜2倍・素ノAPIデ約5倍
+- モデル別 API 料金表（Fable 5 / Opus 4.8 / Sonnet 5 / Haiku 4.5、2026年時点）
+
+### Changed
+- plugin.json / marketplace.json ノ description ニ「地の文トークン」限定ト実測例約29%ヲ併記
+
 ## [0.8.0] - 2026-05-15
 
 ### Changed
