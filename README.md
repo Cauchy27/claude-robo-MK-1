@@ -1,6 +1,6 @@
 # 🤖 claude-robo-MK-1
 
-> 📡 Claude Code ノ日本語出力ヲ **SF AIロボ口調** ニ変換。トークン **30-50%削減デキルカモ**、文脈保持優先。
+> 📡 Claude Code ノ日本語出力ヲ **SF AIロボ口調** ニ変換。応答ノ地ノ文トークン **30-50%削減デキルカモ**（実測例ハ約29%。詳細・注意点ハ「📊 節約効果」セクション参照）、文脈保持優先。
 
 HAL 9000 / GLaDOS / TARS / ATLAS 風ノ冷徹・論理的・機械的トーン。常時有効。v0.5.0〜 カタカナ / ひらがな モード切替可能（v0.8.0〜 ひらがな既定）。
 
@@ -191,6 +191,12 @@ Stop hook デ各応答ノ削減量ヲ自動計測:
 - ベースラインハ40%削減仮定ノ推定値（厳密ナ原文比較デハナイ）
 - **注意**: `tokens_est` / `saved_est` ハ推定。実測ハ `/robo-stats` 経由
 
+自動計測ノ既知ノ限界（数値ヲ読ム際ノ前提）:
+
+1. **計測範囲**: Stop hook ハ各ターンノ**最後ノ assistant メッセージノミ**記録。ツール呼出シヲ挟ム途中ノメッセージハ計測対象外。実トランスクリプト検証デハ、ツール多用セッションニオケル地ノ文捕捉率ハ約30〜70%程度（→ `tokens_est` 合計ハ実際ノ地ノ文総量ヨリ**過小**）
+2. **換算レート**: 全文字ニ一律 1.5 tok/字ヲ適用。応答内ノコード・パス・英語（実際ハ約0.25〜0.3 tok/字）モ1.5換算サレルタメ、コード混在応答デハ `tokens_est` ガ5〜30%程度**過大**ニナリウル
+3. **thinking / tool_use 非計測**: 課金対象ノ出力トークンニハ thinking（推論）ト tool_use ガ含マレルガ、本フックハ地ノ文シカ見テイナイ（本プラグインハソレラヲ圧縮モシナイ）
+
 ### 表示頻度
 
 ノイズ抑制ノタメ、**1応答アタリノ節約量ガ500 tokens 超過時ノミ** systemMessage 表示:
@@ -222,6 +228,8 @@ cat ~/.claude-robo-stats.jsonl | jq -s 'map(.saved_est) | add'
 
 ## 📊 節約効果 / Effectiveness
 
+> ⚠️ **本セクションノ$数値ノ適用範囲**: 以下ノ試算ハスベテ**応答内ノ地ノ文（自然言語プロース）ノミ**ヲ対象トシタ推定。課金対象ノ出力トークンニハ thinking（推論）・tool_use ガ含マレ、エージェンティックナ実利用デハソチラガ支配的（実測例デ thinking ダケデ可視テキストノ1.35倍、tool_use ハ地ノ文ノ約9倍）ダガ、本プラグインハソレラヲ一切圧縮シナイ。マタ、基礎データハ「各ターン最終メッセージノミ捕捉スル部分ログ」ト「n=5 ノ自己生成反事実」ニ依存スル。ヨッテ以下ノ$値ハ、**実際ノ請求額・利用枠ヘノ効果トシテハ上限寄リノ目安**トシテ読ムコト。
+
 ### モデル別 API 料金（2026年時点、$/1M tokens）
 
 | モデル | Input | Output |
@@ -245,7 +253,7 @@ BASELINE_EST=$(( TOKEN_EST * 5 / 3 ))
 SAVED_EST=$(( BASELINE_EST - TOKEN_EST ))
 ```
 
-`baseline_est` ハ実出力（`tokens_est`）ニ常ニ `5/3` ヲ掛ケタ値ニ過ギズ、`saved_est / baseline_est` ハ入力内容ニ関係ナク**常ニ厳密ニ40.0%**ニナル（循環計算）。76日分ノログ集計デ「40.0%」ト出タノハ、5,961件ノ応答内容ヲ反映シタ結果デハナク、計算式ガソウ作ラレテイルカラ。訂正・陳謝。
+`baseline_est` ハ実出力（`tokens_est`）ニ常ニ `5/3` ヲ掛ケタ値ニ過ギズ、`saved_est / baseline_est` ハ入力内容ニ関係ナク**構造的ニ常ニ約40%**ニナル（循環計算。厳密ニハ bash 整数演算ノ切リ捨テデ応答単位39.4〜40.0%ノ範囲、集計平均39.9953%≈40.0%）。76日分ノログ集計デ「40.0%」ト出タノハ、5,961件ノ応答内容ヲ反映シタ結果デハナク、計算式ガソウ作ラレテイルカラ。訂正・陳謝。
 
 ### 実測（オンデマンド `/robo-stats`、本セッション5件サンプル）
 
@@ -260,13 +268,17 @@ SAVED_EST=$(( BASELINE_EST - TOKEN_EST ))
 | 5 | 316 | 381 | 17.1% |
 | **平均** | - | - | **約29.4%** |
 
-計測方式：**推定**（文字数ベース、method C。API実測・tiktokenヨリ精度低）。サンプル5件・本セッション限定、長期傾向トハ限ラナイ。
+計測方式：**推定**（文字数ベース、method C。API実測・tiktokenヨリ精度低）。信頼性ノ限界：
 
-「30-50%」ノ看板ノ**下限寄リ**、自動ログノ仮定値（40%）ヨリモ**低メ**ニ出タ。以下ノ$試算ハ自動ログ仮定値（40%）ベースノママ残スガ、実際ハコレヨリ小サイ可能性ガアル点、注意。
+- **n=5・観測レンジ17.1〜35.1%**（18ポイント幅）。「29.4%」ハ点推定デハナク、真ノ削減率ハコノ幅ノドコカニアルト読ムベキ
+- **通常版ハ自己生成反事実**（Claude自身ガSKILL.mdノ逆変換デ仮構築シタモノデ、実在ノ削減前文デハナイ）。丁寧語復元デ冗長化サレ削減率ガ過大ニ出ルバイアスト、実際ノ通常口調ハモット冗長ダッタ可能性（過小バイアス）ノ両方ガアリウル
+- 本セッション限定ノサンプルデ、長期傾向トハ限ラナイ
+
+結果ハ自動ログノ仮定値（40%）ヨリ**低ク**、看板ノ「30-50%」レンジヲ**下回ッタ**（29.4 < 30、レンジ外）。以下ノ$試算ハコノ実測値（29.4%）ベースニ更新済ミダガ、上記ノ通リ幅ヲ持ツ推定デアル点、注意。
 
 ### モデル別コスト換算（`/robo-stats` 実測29.4%ベース・訂正版）
 
-自動ログ仮定（40%）デハナク、**`/robo-stats` 実測値（約29.4%）**ヲ使用シ再計算。ロボ実出力ノ総量（`tokens_est` 合計 15,138,157 tok、コレ自体ハ文字数ベースノ実出力推定デ信頼度アリ）ニ対シ、削減率29.4%ヲ適用シタ場合ノ推定ベースライン・削減量ヲ算出：
+自動ログ仮定（40%）デハナク、**`/robo-stats` 実測値（約29.4%）**ヲ使用シ再計算。ロボ実出力ノ総量（`tokens_est` 合計 15,138,157 tok。2026-07-01時点ノログスナップショット5,961件基準。全文字一律1.5tok/字換算ノタメ、コード混在応答デハ5〜30%程度過大ノ可能性 — 上記「自動計測ノ既知ノ限界」参照）ニ対シ、削減率29.4%ヲ適用シタ場合ノ推定ベースライン・削減量ヲ算出：
 
 | 指標 | 値 |
 |------|---:|
@@ -300,16 +312,16 @@ SAVED_EST=$(( BASELINE_EST - TOKEN_EST ))
 
 ### ヘビーユーザー換算（実測ピーク基準、29.4%ベース）
 
-「実測ペース平均」ハ閑散日モ含ムタメ、フル稼働時ノ上限目安トシテ**アクティブ日ノ上位25%（繁忙日）ノ平均ペース**デ再計算：繁忙日平均 約197応答/日 → 月換算 約5,910応答。
+「実測ペース平均」ハ閑散日モ含ムタメ、フル稼働時ノ上限目安トシテ**アクティブ日ノ上位25%（繁忙日）ノ平均ペース**デ再計算（他ノ表ト同ジ2026-07-01時点・5,961件スナップショット基準）：繁忙日平均 約197応答/日 → 月換算 約5,902応答。
 
-| モデル | 月間節約額（ヘビー使用、約5,910応答/月） |
+| モデル | 月間節約額（ヘビー使用、約5,902応答/月） |
 |--------|--------------------------------------------|
-| Fable 5 | 約 $313 |
+| Fable 5 | 約 $312 |
 | Opus 4.8 | 約 $156 |
-| Sonnet 5 | 約 $94（イントロ価格適用時ハ約 $63） |
+| Sonnet 5 | 約 $94（イントロ価格適用時ハ約 $62） |
 | Haiku 4.5 | 約 $31 |
 
-コレガ「実測データ上ノ最ヘビーケース」。日常的ニコレダケ使エバ月$31〜$313ノレンジ（モデル依存）ニ到達スル計算ダガ、上記ペースハ自動処理込ミノ実測値デアリ、純粋ナ手動対話ダケデハコレヨリ低ク見積モルベキ。5サンプルノミノ推定値ナノデ、実際ノ削減率ガコレヨリ上下スレバ本表モ比例シテ変動スル。
+コレガ「実測データ上ノ最ヘビーケース」。日常的ニコレダケ使エバ月$31〜$312ノレンジ（モデル依存）ニ到達スル計算ダガ、上記ペースハ自動処理込ミノ実測値デアリ、純粋ナ手動対話ダケデハコレヨリ低ク見積モルベキ。5サンプルノミノ推定値ナノデ、実際ノ削減率ガコレヨリ上下スレバ本表モ比例シテ変動スル。
 
 ### 重要：削減対象ハ「応答内ノ地ノ文」ノミ
 
@@ -321,9 +333,27 @@ SAVED_EST=$(( BASELINE_EST - TOKEN_EST ))
 
 アジェンティックなコーディング作業デハ、1ターンアタリノトークン消費ノ大半ハ**入力側**（会話履歴ノ再送信・ファイル内容・ツール結果）ガ占メ、地ノ文ノ出力ハ全体ノホンノ一部ニ過ギナイコトガ多イ。「1回デ数百万トークン使ッテイル気ガスル」ト感ジルノハ、コノ入力側ノ再送信コスト（本プラグインノ削減対象外）ヲ体感シテイル可能性ガ高イ。ツマリ、地ノ文ヲ30-40%圧縮シテモ、**セッション全体ノトークン消費ニ占メル割合ハ極メテ小サイ**。
 
+### 逆方向ノ未計上効果：履歴再送信ニヨル入力側複利
+
+一方デ、上記$表ガ**計上シテイナイプラス要因**モアル。APIハステートレスノタメ、ターンkノリクエストハ過去ノ全履歴ヲ入力トシテ再送信スル。ターンkノ応答ノ地ノ文ヲ Δ トークン削ルト、以後ノ全ターン（k+1〜N）ノ入力デモ毎回 Δ 効キ続ケ、入力側ノ累積節約ハ `Δ × N(N−1)/2`——**セッション長ノ二乗（O(N²)）デ成長スル**（指数的デハナイ。毎ターンノ節約ガ掛ケ算デハナク足シ算デ積ミ上ガルタメ）。
+
+タダシ **prompt caching ガコノ金額効果ヲ約1/10ニ減衰サセル**。Claude Code ハキャッシュ常用ノタメ、再送信履歴ノ大半ハキャッシュ読取（通常入力単価ノ約0.1倍）デ課金サレル。数値例（50ターン、Δ=300 tok/応答、Sonnet 5）:
+
+| 経路 | 累積節約トークン | 金額 |
+|---|---:|---:|
+| 出力側（$表ノ計上対象） | 15,000 tok | $0.225 |
+| 入力側複利・**キャッシュ無シ**（$3/M） | 367,500 tok | $1.10（出力側ノ約5倍） |
+| 入力側複利・**キャッシュ有リ**（読取$0.30/M） | 367,500 tok | $0.11 |
+
+- **Claude Code（キャッシュ有効）**: 長セッション（50ターン級）デ$表ノ約1.5〜2倍ニ乗ル程度。30ターン未満デハ誤差レベル
+- **素ノAPI利用（キャッシュ未使用ノ自作アプリ等）**: 複利項ガ支配的ニナリ、$表ノ5倍前後マデ拡大シウル
+- **副次効果**: 履歴ガ短イ＝コンテキスト窓ノ消費ガ遅イ＝compaction 発動ガ遅レ、1セッションヲ長ク維持デキル（$ニ現レナイ実利。週間枠ユーザーニモ有効）
+
+ナオ、複利ガ増幅スルノモアクマデ「地ノ文スライス」ノミ。thinking・tool_use 非圧縮ニヨル過大評価要因（セクション冒頭ノ免責参照）ノ方ガ大キイト推定サレルタメ、**総合評価「$表ハ上限寄リノ目安」ハ変ワラナイ**。
+
 ### 週間利用上限（サブスクリプションプラン）ヲ考慮スル場合
 
-従量課金APIデハナクClaude Pro/Max等ノ週間利用上限付キプランヲ利用中ナラ、評価軸ハ「$節約額」デハナク「週間枠内デドレダケ余裕ガ増エルカ」ニナル。上記ノ理由（入力トークンハ非圧縮）カラ、**週間トークン消費ニ占メル削減分ノ割合ハ、$換算ト同様ニ小サイ**ト推定サレル——地ノ文ガ週間消費全体ニ占メル比率ニ比例スルタメ。正確ナ内訳（入力/出力比率）ハユーザー環境依存デ本リポジトリ側カラハ把握不能。実際ノ週間利用状況ハ Claude Code / claude.ai ノ利用状況画面（`/usage` 等）デ確認スルコトヲ推奨。
+従量課金APIデハナクClaude Pro/Max等ノ週間利用上限付キプランヲ利用中ナラ、評価軸ハ「$節約額」デハナク「週間枠内デドレダケ余裕ガ増エルカ」ニナル。上記ノ理由（入力・thinking・tool_use ハ非圧縮）カラ、**方向トシテハ効果ハ小サイ側ト考エラレルガ、大キサハ本リポジトリ側カラハ定量デキナイ**——効果ハ「地ノ文ガ週間消費全体ニ占メル比率」ニ比例シ、ソノ比率（入力/出力/thinking内訳）ハユーザー環境・ワークロード依存ノタメ。マタ、レート制限ガ各種トークンヲドウ重ミ付ケスルカモ非公開。実際ノ週間利用状況ハ Claude Code / claude.ai ノ利用状況画面（`/usage` 等）デ確認シテ判断スルコトヲ推奨。
 
 ### 主目的
 
@@ -420,6 +450,8 @@ verb endings, and connectors.
 
 ## 📊 Effectiveness (English)
 
+> ⚠️ **Scope of every dollar figure in this section**: all estimates below cover **only the natural-language prose inside assistant responses**. Billed output tokens also include thinking and tool_use content — which dominate real agentic usage (empirically, thinking alone can exceed visible text by 1.35×, and tool_use content can be ~9× the prose volume) — and this plugin compresses none of that. The underlying data also relies on a partial log (only each turn's final message is captured) and an n=5 self-generated counterfactual. Read the dollar figures as **upper-bound-leaning estimates of real bill/quota impact**.
+
 ### Per-Model API Pricing (as of 2026, $/1M tokens)
 
 | Model | Input | Output |
@@ -443,7 +475,7 @@ BASELINE_EST=$(( TOKEN_EST * 5 / 3 ))
 SAVED_EST=$(( BASELINE_EST - TOKEN_EST ))
 ```
 
-`baseline_est` is always `tokens_est × 5/3`, so `saved_est / baseline_est` is **always exactly 40.0%** regardless of the actual response content — it's circular. Aggregating 76 days of log entries and getting "40.0%" reflects the formula, not the content of those 5,961 responses. Correction and apology for the earlier claim.
+`baseline_est` is always `tokens_est × 5/3`, so `saved_est / baseline_est` is **structurally always ~40%** regardless of the actual response content — it's circular. (Strictly: bash integer truncation puts individual responses in the 39.4–40.0% range, aggregating to 39.9953% ≈ 40.0%.) Aggregating 76 days of log entries and getting "40.0%" reflects the formula, not the content of those 5,961 responses. Correction and apology for the earlier claim.
 
 ### Measured (on-demand `/robo-stats`, 5 samples from this session)
 
@@ -458,13 +490,17 @@ Using `/robo-stats`: extracted 5 robo-toned responses from this conversation, ge
 | 5 | 316 | 381 | 17.1% |
 | **Average** | - | - | **~29.4%** |
 
-Method: **estimate** (character-based, method C — lower precision than an API count or tiktoken). 5 samples, this session only — not necessarily representative of long-term behavior.
+Method: **estimate** (character-based, method C — lower precision than an API count or tiktoken). Reliability limits:
 
-This lands at the **low end** of the claimed "30-50%" range, and **below** the auto-log's assumed 40%. The dollar tables below still use the auto-log's assumed 40% basis; the real figure may be smaller.
+- **n=5, observed range 17.1–35.1%** (an 18-point spread). Read "29.4%" as the center of a wide band, not a precise point estimate — the true rate could be anywhere in that band
+- **The "normal" version is a self-generated counterfactual** (Claude reconstructing it by reverse-applying SKILL.md's own rules — not a real pre-robo original). This can bias the rate upward (politeness restoration padding the counterfactual) or downward (genuine normal-tone output might have been even more verbose)
+- Samples come from this one session — not necessarily representative of long-term behavior
+
+The result came in **below** the auto-log's assumed 40%, and **below the floor of the advertised "30-50%" range** (29.4 < 30 — outside the range, not at its low end). The dollar tables below have been updated to this measured 29.4% basis; per the caveats above, treat them as a band, not a point.
 
 ### Per-Model Cost Conversion (corrected: `/robo-stats` measured 29.4%)
 
-Recalculated using the **`/robo-stats` measured rate (~29.4%)** instead of the auto-log's assumed 40%. Applying that rate to the real total output volume (`tokens_est` sum, 15,138,157 tok — itself a character-based estimate of actual output, reasonably trustworthy) gives an estimated counterfactual baseline and savings:
+Recalculated using the **`/robo-stats` measured rate (~29.4%)** instead of the auto-log's assumed 40%. Applying that rate to the total logged output volume (`tokens_est` sum, 15,138,157 tok — a 2026-07-01 snapshot of the first 5,961 log entries; note this applies a flat 1.5 tok/char to all characters, so code-heavy responses can be overstated by roughly 5–30% — see the auto-measurement limitations noted above) gives an estimated counterfactual baseline and savings:
 
 | Metric | Value |
 |--------|------:|
@@ -498,16 +534,16 @@ The log above averages 78.4 responses/day (≈2,353 responses/month). This inclu
 
 ### Heavy-Usage Conversion (measured peak basis, 29.4% basis)
 
-The full-period average includes quiet days, so as an upper-bound "if you go all-in" estimate, recompute using **the average pace of the busiest 25% of active days**: ~197 responses/day on busy days → ~5,910 responses/month.
+The full-period average includes quiet days, so as an upper-bound "if you go all-in" estimate, recompute using **the average pace of the busiest 25% of active days** (from the same 2026-07-01 / 5,961-entry snapshot as the other tables): ~197 responses/day on busy days → ~5,902 responses/month.
 
-| Model | Monthly savings (heavy usage, ~5,910 responses/month) |
+| Model | Monthly savings (heavy usage, ~5,902 responses/month) |
 |-------|-----------------------------------------------------------|
-| Fable 5 | ~$313 |
+| Fable 5 | ~$312 |
 | Opus 4.8 | ~$156 |
-| Sonnet 5 | ~$94 (intro pricing: ~$63) |
+| Sonnet 5 | ~$94 (intro pricing: ~$62) |
 | Haiku 4.5 | ~$31 |
 
-This is the heaviest case the measured data supports — sustaining this pace lands you in the $31–$313/month range depending on model. Note this pace itself includes automated processing, so pure manual-conversation usage alone would likely land lower. This is also based on a 5-sample estimate — if the true reduction rate differs, this table scales proportionally.
+This is the heaviest case the measured data supports — sustaining this pace lands you in the $31–$312/month range depending on model. Note this pace itself includes automated processing, so pure manual-conversation usage alone would likely land lower. This is also based on a 5-sample estimate — if the true reduction rate differs, this table scales proportionally.
 
 ### Important: only response prose is compressed
 
@@ -519,9 +555,27 @@ The biggest reason the felt impact and the numbers diverge: this plugin only com
 
 In agentic coding work, most per-turn token spend is on the **input** side — resent conversation history, file contents, tool results — while the prose output is often a small slice of the total. If it feels like "I'm burning hundreds of millions of tokens in one go," that's very likely the input-side resend cost (outside this plugin's scope), not the output text. So even a genuine 30–40% cut on the prose slice is a **tiny fraction of total session token spend**.
 
+### The uncounted effect in the other direction: input-side compounding via history resends
+
+That said, the dollar tables above also **omit a positive factor**. The API is stateless, so each turn resends the full conversation history as input. Cutting Δ tokens of prose from turn k's response then saves Δ again on **every subsequent turn's input** (turns k+1 through N), so cumulative input-side savings grow as `Δ × N(N−1)/2` — **quadratic in session length (O(N²))**, not exponential: per-turn savings add up rather than multiply.
+
+However, **prompt caching dampens the dollar effect by roughly 10×**. Claude Code uses caching by default, so most of the resent history bills at cache-read rates (~0.1× the normal input price). Worked example (50 turns, Δ=300 tok/response, Sonnet 5):
+
+| Path | Cumulative saved tokens | Dollars |
+|---|---:|---:|
+| Output side (what the $ tables count) | 15,000 tok | $0.225 |
+| Input-side compounding, **no caching** ($3/M) | 367,500 tok | $1.10 (~5× the output side) |
+| Input-side compounding, **with caching** (reads $0.30/M) | 367,500 tok | $0.11 |
+
+- **Claude Code (caching on)**: brings the total to roughly 1.5–2× the $ tables in long sessions (~50 turns); negligible below ~30 turns
+- **Raw API usage (no caching, e.g. a custom app)**: the compounding term dominates and can scale the $ tables by ~5×
+- **Side benefit**: shorter history = slower context-window consumption = later compaction and longer usable sessions (real value that never shows up in $; also relevant to weekly-cap users)
+
+Note the compounding still only amplifies the **prose slice**. The overstating factor from uncompressed thinking/tool_use (see the disclaimer at the top of this section) is estimated to be larger, so the overall verdict — **treat the $ tables as upper-bound-leaning** — stands.
+
 ### If you're on a weekly usage cap (subscription plans)
 
-On Claude Pro/Max or similar weekly-cap plans (not pay-per-token), the relevant question isn't "$ saved" but "how much more headroom does this buy within my weekly quota." For the same reason as above (input tokens are untouched), **the proportion of weekly quota freed up is likely similarly small** — it scales with how much of your weekly consumption is prose output versus input. The actual input/output ratio is account- and workload-specific and can't be determined from this repo; check your real usage breakdown via Claude Code / claude.ai's usage view (e.g. `/usage`).
+On Claude Pro/Max or similar weekly-cap plans (not pay-per-token), the relevant question isn't "$ saved" but "how much more headroom does this buy within my weekly quota." For the same reason as above (input, thinking, and tool_use tokens are untouched), **the direction is likely a small effect — but the magnitude cannot be sized from this repo**: it scales with how much of your weekly consumption is prose output versus everything else, and that split is account- and workload-specific. How the rate limiter weights different token types is also not public. Check your real usage breakdown via Claude Code / claude.ai's usage view (e.g. `/usage`) and judge from there.
 
 ### Primary Purpose
 
@@ -534,9 +588,9 @@ Cost saving < **information density + dogfooding + character**
 | タイミング | 動作 | 入力トークン |
 |----------|------|------------|
 | `/plugin install` | `plugin.json` 登録ノミ | 0 |
-| **SessionStart** | `hooks/activate.sh` → `additionalContext` 注入 | ~200 tok (1回) |
+| **SessionStart** | `hooks/activate.sh` → `additionalContext` 注入 | 約300 tok (1回、注入文329字ノ文字数換算) |
 | 対話中 | system context 常駐（cache利用） | 安価 |
-| スキルトリガー時 | `skills/robo/SKILL.md` 読込 | ~600 tok (発動時ノミ) |
+| スキルトリガー時 | `skills/robo/SKILL.md` 読込 | 約4,500 tok (発動時ノミ。tiktoken実測4,463) |
 | **各応答終了後** | `hooks/measure.sh` → ログ・閾値超過時 systemMessage | ゼロ（外部プロセス） |
 
 ### コンテキスト構成
@@ -571,9 +625,9 @@ Cost saving < **information density + dogfooding + character**
 | Trigger | Action | Input tokens |
 |---------|--------|--------------|
 | `/plugin install` | Register `plugin.json` only | 0 |
-| **SessionStart** | `hooks/activate.sh` → inject `additionalContext` | ~200 tok (once) |
+| **SessionStart** | `hooks/activate.sh` → inject `additionalContext` | ~300 tok (once; 329-char injected string, char-based estimate) |
 | In-session | System context resident (cache-backed) | Cheap |
-| Skill trigger | Load `skills/robo/SKILL.md` | ~600 tok (on trigger) |
+| Skill trigger | Load `skills/robo/SKILL.md` | ~4,500 tok (on trigger; tiktoken-measured 4,463) |
 | **Response end** | `hooks/measure.sh` → log, systemMessage if threshold | Zero (external) |
 
 ### Context Layout
