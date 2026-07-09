@@ -1,5 +1,22 @@
 # 🤖 claude-robo-MK-1
 
+
+## AI支援構成（2026-07-10）
+
+`.claude/skills` を正本、`.agents/skills` を Codex / Antigravity 参照ラッパーとして運用する。
+
+| 項目 | 現状 |
+|------|------|
+| 共通スキル | 1件（subagent 1） |
+| Codex / Antigravity ラッパー | 1件 |
+| スキル内サブエージェント | 0件（なし） |
+| ペルソナエージェント | 0件（なし） |
+
+- 全 `SKILL.md` は `execution_type` を `standalone` / `agent-teams` / `subagent` / `hybrid` のいずれかで指定する。
+- スキル内サブエージェント（`.claude/skills/*/agents/*.md`）は frontmatter の `model:` で実効モデルを明示する。
+- ラッパー再生成: `bash scripts/generate-agent-wrappers.sh`
+- ラッパー同期確認: `bash scripts/generate-agent-wrappers.sh --check`
+
 > 📡 Claude Code ノ日本語出力ヲ **SF AIロボ口調** ニ変換。応答ノ地ノ文トークン **30-50%削減デキルカモ**（実測例ハ約29%。詳細・注意点ハ「📊 節約効果」セクション参照）、文脈保持優先。
 
 HAL 9000 / GLaDOS / TARS / ATLAS 風ノ冷徹・論理的・機械的トーン。常時有効。v0.5.0〜 カタカナ / ひらがな モード切替可能（v0.8.0〜 ひらがな既定）。
