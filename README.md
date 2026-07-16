@@ -368,6 +368,19 @@ SAVED_EST=$(( BASELINE_EST - TOKEN_EST ))
 
 ナオ、複利ガ増幅スルノモアクマデ「地ノ文スライス」ノミ。thinking・tool_use 非圧縮ニヨル過大評価要因（セクション冒頭ノ免責参照）ノ方ガ大キイト推定サレルタメ、**総合評価「$表ハ上限寄リノ目安」ハ変ワラナイ**。
 
+### 実環境90日ケーススタディ（2026-07-16、フルログ実測）
+
+社内AI活用棚卸シ（2026-07-16）デ、作者環境ノ90日分フルログヲ集計シタ実測値。前セクションノ数値例（50ターン想定）ト異ナリ、実際ノセッション長分布カラ複利ヲ算出シタ点ガ新規:
+
+- 対象: 7,432応答（`~/.claude-robo-stats.jsonl` 全量）、メインセッション282件
+- 直接削減（出力側）: 約1,217万 tok（自動ログ40%仮定）。実測29.4%換算ナラ約760万 tok
+- セッション長ノ実測分布: 中央値80ターン、最長**5,024ターン**。応答1件ハ平均**約750回**、後続リクエストノ履歴トシテ再送サレル（`N(N−1)/2` ノ二乗項ニヨリ長大セッションガ平均ヲ支配）
+- 入力側複利（再送回避）: 約91.3億 tok（40%仮定・キャッシュ読取単価デ換算）
+- API換算削減額: **上限約$4,945/90日**（output $304 + cache read $4,565 + cache write $76、Opus 4.8単価）。29.4%換算＋compaction考慮ノ保守レンジデ**約$3,000/90日（年間約$12,000相当）**
+- 同期間ノClaude Code総消費ハ約174.8億 tok・API換算約$14,800/90日 → **セッション全体ノトークンデ約2〜3割、コスト換算デ約17〜25%ノ削減効果**
+
+実環境デハ前セクションノ理論例（50ターンデ1.5〜2倍）ヲ大キク超エ、**入力側複利ガ出力側ノ約15倍ト支配項ガ逆転**。タダシ超長セッションデハ compaction ガ古イ履歴ヲ圧縮スルタメ「750回再送」ハ上限値デアリ、$値モ上限寄リノ目安トシテ読ムコト。応答文単体ノ削減率（約3〜4割）ガ、セッション全体デハ2〜3割ニ希釈サレツツモ、複利ニヨリ金額インパクトハ直接分ノ約10倍ニ増幅サレル——ガ本ケーススタディノ結論。
+
 ### 週間利用上限（サブスクリプションプラン）ヲ考慮スル場合
 
 従量課金APIデハナクClaude Pro/Max等ノ週間利用上限付キプランヲ利用中ナラ、評価軸ハ「$節約額」デハナク「週間枠内デドレダケ余裕ガ増エルカ」ニナル。上記ノ理由（入力・thinking・tool_use ハ非圧縮）カラ、**方向トシテハ効果ハ小サイ側ト考エラレルガ、大キサハ本リポジトリ側カラハ定量デキナイ**——効果ハ「地ノ文ガ週間消費全体ニ占メル比率」ニ比例シ、ソノ比率（入力/出力/thinking内訳）ハユーザー環境・ワークロード依存ノタメ。マタ、レート制限ガ各種トークンヲドウ重ミ付ケスルカモ非公開。実際ノ週間利用状況ハ Claude Code / claude.ai ノ利用状況画面（`/usage` 等）デ確認シテ判断スルコトヲ推奨。
@@ -589,6 +602,19 @@ However, **prompt caching dampens the dollar effect by roughly 10×**. Claude Co
 - **Side benefit**: shorter history = slower context-window consumption = later compaction and longer usable sessions (real value that never shows up in $; also relevant to weekly-cap users)
 
 Note the compounding still only amplifies the **prose slice**. The overstating factor from uncompressed thinking/tool_use (see the disclaimer at the top of this section) is estimated to be larger, so the overall verdict — **treat the $ tables as upper-bound-leaning** — stands.
+
+### Real-Environment 90-Day Case Study (2026-07-16, full-log measurement)
+
+From an internal AI-usage inventory (2026-07-16) of the author's own environment, aggregating the full 90-day logs. Unlike the worked example above (which assumed 50 turns), this computes the compounding factor from the **actual session-length distribution**:
+
+- Scope: 7,432 responses (entire `~/.claude-robo-stats.jsonl`), 282 main sessions
+- Direct savings (output side): ~12.17M tok (at the auto-log's 40% assumption); ~7.6M tok at the measured 29.4% rate
+- Measured session lengths: median 80 turns, longest **5,024 turns**. Each response is resent as history on **~750 subsequent requests on average** (the `N(N−1)/2` quadratic term makes long sessions dominate the mean)
+- Input-side compounding (avoided resends): ~9.13B tok (40% basis, priced at cache-read rates)
+- API-equivalent savings: **upper bound ~$4,945 / 90 days** (output $304 + cache read $4,565 + cache write $76, at Opus 4.8 rates); conservative band with the 29.4% basis and compaction discounting: **~$3,000 / 90 days (~$12,000/year equivalent)**
+- Total Claude Code consumption over the same period was ~17.48B tok ≈ $14,800/90d API-equivalent → **roughly a 20–30% reduction in whole-session tokens, 17–25% in cost terms**
+
+In the real environment the compounding far exceeds the theoretical example above (1.5–2× at 50 turns): **the input-side term dominates at ~15× the output side**. Caveat: compaction trims old history in very long sessions, so "750 resends" is an upper bound — read the dollar figures as upper-bound-leaning. The takeaway: the per-response prose reduction (~30–40%) dilutes to ~20–30% at the whole-session level, yet compounding amplifies the dollar impact to ~10× the direct-savings figure.
 
 ### If you're on a weekly usage cap (subscription plans)
 
