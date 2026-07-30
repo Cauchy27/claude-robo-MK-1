@@ -35,6 +35,9 @@ BUILTIN_AGENTS = {
 
 RESERVED_AGENT_FILENAMES = {"README", "COMPANY-VALUES"}
 
+# 説明文中の一般化表記。実際のエージェント名ではない
+PLACEHOLDER_NAMES = {"xxx", "yyy", "zzz", "name", "agent", "agent_type", "subagent"}
+
 
 def global_agent_names(root: Path) -> set[str]:
     agents_dir = root / ".claude" / "agents"
@@ -81,6 +84,32 @@ def check(root: Path) -> list[str]:
         for name in sorted(used - known):
             violations.append(
                 f"{skill}: subagent_type=\"{name}\" は .claude/agents/ に存在せず起動できない"
+            )
+
+        # 1-1. subagent_type を伴わない Task(名前) 形式は起動できない
+        #      （規約の必須要件2「subagent_type を必ず明示する」に違反）
+        #      ただしフロー図の略記は許容する。判定は「実際の起動ブロックが
+        #      同一ファイル内にあるか」で行い、無ければ略記しか存在しない＝違反。
+        inner_names = {
+            f.stem
+            for f in (skill_md.parent / "agents").glob("*.md")
+            if f.stem not in RESERVED_AGENT_FILENAMES
+        }
+        # インラインコード（`Task(x)`）は過去の誤りを引用した記述であり違反ではない。
+        # 「失敗の記録と反映」節でかつての誤記を引用するため、除外しないと自己言及で誤検出する。
+        scannable = re.sub(r"`[^`\n]*`", "", text)
+        for name in sorted(set(re.findall(r"Task\(\s*([a-z][a-z0-9_-]*)\s*\)", scannable))):
+            if name in PLACEHOLDER_NAMES:
+                continue
+            if name in used:
+                continue
+            # 形式B/C は素材名で図示し、実体は別の subagent_type で起動する。
+            # 実際の起動ブロックがあるなら図の略記として許容する。
+            if used and name in inner_names:
+                continue
+            violations.append(
+                f"{skill}: Task({name}) は subagent_type がなく起動できない"
+                f"（形式A/B/C のいずれかで subagent_type を明示すること）"
             )
 
         # 1-2. prompt 内で参照する内蔵素材（agents/*.md）が実在するか
