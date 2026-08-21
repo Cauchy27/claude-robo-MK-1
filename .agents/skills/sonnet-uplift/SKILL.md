@@ -10,8 +10,8 @@ description: |
   「品質ゲート埋め込み」「検証チェックリスト埋め込み」「エスカレーション基準」「テスト先行アップリフト」「テストファースト委譲」
 allowed-tools: Read, Bash, Glob, Grep
 execution_type: subagent
-version: 1.2.0
-updated: 2026-07-10
+version: 1.3.0
+updated: 2026-08-21
 ---
 
 # Sonnet Uplift
