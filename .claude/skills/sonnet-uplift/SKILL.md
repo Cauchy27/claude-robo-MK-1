@@ -214,10 +214,6 @@ Task(
 
 | スキル | 用途 |
 |-------|------|
-| [agent-creation](../agent-creation/SKILL.md) | 新規エージェント作成（model 判定を含む） |
-| [impl-review-loop](../impl-review-loop/SKILL.md) | 実装→レビュー→修正ループ（同じ検証ループ思想のコード実装版） |
-| [internal-structure-review](../internal-structure-review/SKILL.md) | 埋め込み後の必須レビュー |
-| [agent-review](../agent-review/SKILL.md) | エージェント定義の品質チェック |
 
 ---
 

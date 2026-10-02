@@ -1,0 +1,8 @@
+# パス 1（2026-09 S6）: タグ版 blob・テンプレ由来の本体専用パス／docs（decisions §7 D2）。本体 templates の是正は S9
+# P10: sonnet-uplift があるので agent-model-tuning.md は残す。その中の本体専用パスだけを抑止する（最終行）
+バッククォート参照が実在しない: \.claude/skills/sonnet-uplift/SKILL\.md -> scripts/validate-structure\.sh$
+バッククォート参照が実在しない: \.claude/skills/sonnet-uplift/SKILL\.md -> templates/agents\.md$
+バッククォート参照が実在しない: \.claude/skills/sonnet-uplift/reference\.md -> templates/hooks/scripts/test-freeze-check\.sh$
+バッククォート参照が実在しない: \.claude/skills/sonnet-uplift/SKILL\.md -> \.claude/docs/frontmatter-policy\.md$
+バッククォート参照が実在しない: \.claude/skills/sonnet-uplift/SKILL\.md -> \.claude/docs/skill-template-sync\.md$
+バッククォート参照が実在しない: \.claude/docs/agent-model-tuning\.md -> templates/agents\.md$
